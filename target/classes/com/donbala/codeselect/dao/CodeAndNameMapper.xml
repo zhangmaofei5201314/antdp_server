@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donbala.codeselect.dao.CodeAndNameMapper">
+        <resultMap id="BaseResultMap" type="com.donbala.codeselect.model.CodeAndName">
+            <result column="code" jdbcType="VARCHAR" property="code" />
+            <result column="codename" jdbcType="VARCHAR" property="codename" />
+        </resultMap>
+
+        <!-- 角色下拉 -->
+        <select id="selectRole" resultMap="BaseResultMap">
+              select
+              roleid as code , rolename as codename
+              from cms_role
+        </select>
+        
+
+
+</mapper>
