@@ -1,8 +1,8 @@
 package com.donbala.userManagement.model;
 
-import java.util.List;
+import com.donbala.Commons.model.BaseResult;
 
-public class CmsUser {
+public class CmsUser extends BaseResult {
     private String usercode;
 
     private String email;
@@ -35,15 +35,15 @@ public class CmsUser {
 
     private String modifyuser;
 
-    private List<CmsUserrole> cmsUserroles;
+    private String[] cmsUserroles;
 
     private String operatetype;
 
-    public List<CmsUserrole> getCmsUserroles() {
+    public String[] getCmsUserroles() {
         return cmsUserroles;
     }
 
-    public void setCmsUserroles(List<CmsUserrole> cmsUserroles) {
+    public void setCmsUserroles(String[] cmsUserroles) {
         this.cmsUserroles = cmsUserroles;
     }
 

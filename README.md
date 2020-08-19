@@ -1,1 +1,97 @@
-"# antdp_server" 
+
+~~~
+-- 用户表
+create table CMS_USER
+(
+  USERCODE      VARCHAR2(50) not null,
+  EMAIL         VARCHAR2(50),
+  MOBILE        VARCHAR2(11),
+  PASSWORD      VARCHAR2(40),
+  NAME          VARCHAR2(50),
+  GENDOR        VARCHAR2(2),
+  BRANCH        VARCHAR2(20),
+  DEPARTMENT    VARCHAR2(20),
+  STATE         VARCHAR2(1),
+  ADMINFLAG     VARCHAR2(1),
+  PSWEXPIREDATE DATE,
+  LASTLOGINDATE DATE,
+  MAKEDATE      DATE,
+  MAKEUSER      VARCHAR2(20),
+  MODIFYDATE    DATE,
+  MODIFYUSER    VARCHAR2(20)
+);
+alter table CMS_USER add primary key (USERCODE);
+~~~
+~~~
+-- 角色表
+create table CMS_ROLE
+(
+  ROLEID     VARCHAR2(32) not null,
+  ROLENAME   VARCHAR2(20),
+  MAKEDATE   DATE,
+  MAKEUSER   VARCHAR2(20),
+  MODIFYDATE DATE,
+  MODIFYUSER VARCHAR2(20)
+);
+alter table CMS_ROLE add primary key (ROLEID);
+~~~
+~~~
+-- 菜单表
+create table ANTD_MENU
+(
+  MENUID       VARCHAR2(10) not null,
+  MENUCODE     VARCHAR2(25),
+  MENUNAME     VARCHAR2(25),
+  PARENTMENUID VARCHAR2(10),
+  MENULINK     VARCHAR2(100),
+  STATUS       VARCHAR2(1),
+  NODEORDER    INTEGER,
+  MAKEDATE     DATE,
+  MAKEUSER     VARCHAR2(20),
+  MODIFYDATE   DATE,
+  MODIFYUSER   VARCHAR2(20)
+);
+alter table ANTD_MENU add primary key (MENUID);
+~~~
+~~~
+-- 用户角色表
+create table CMS_USERROLE
+(
+  USERCODE   VARCHAR2(50) not null,
+  ROLEID     VARCHAR2(32) not null,
+  MAKEDATE   DATE,
+  MAKEUSER   VARCHAR2(20),
+  MODIFYDATE DATE,
+  MODIFYUSER VARCHAR2(20)
+);
+alter table CMS_USERROLE add primary key (USERCODE, ROLEID);
+~~~
+~~~
+-- 角色菜单表
+create table CMS_ROLEMENU
+(
+  ROLEID     VARCHAR2(32) not null,
+  ROLENAME   VARCHAR2(20),
+  MENUID     VARCHAR2(200) not null,
+  MAKEDATE   DATE,
+  MAKEUSER   VARCHAR2(20),
+  MODIFYDATE DATE,
+  MODIFYUSER VARCHAR2(20)
+);
+alter table CMS_ROLEMENU add primary key (ROLEID, MENUID);
+~~~
+~~~
+-- 登录登出轨迹表
+create table CMS_LOGINTRACE
+(
+  ID          VARCHAR2(32) not null,
+  USERCODE    VARCHAR2(32),
+  OPERATETYPE VARCHAR2(1),
+  OPERATEDATE DATE,
+  MAKEDATE    DATE,
+  MAKEUSER    VARCHAR2(20),
+  MODIFYDATE  DATE,
+  MODIFYUSER  VARCHAR2(20)
+);
+alter table CMS_LOGINTRACE add primary key (ID);
+~~~

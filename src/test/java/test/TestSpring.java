@@ -1,6 +1,6 @@
 package test;
 
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * {\_/}
@@ -18,31 +18,52 @@ public class TestSpring {
 //        TestJunitExp testJunitExp = context.getBean(TestJunitExp.class);
 
 //        testJunitExp.test1();
+        Integer[] arr = {4,2,6,3,1,5};
+        select(arr);
+        System.out.println(Arrays.toString(arr));
 
-        List<Map<String, Object>> returnList = new ArrayList<>();
-        Map<String, Object> mapP = new HashMap<>();
-        mapP.put("path","/dashboard");
-        mapP.put("name","dashboard");
-        mapP.put("icon","");
-        List<Map<String, Object>> childrenList = new ArrayList<>();
-
-        Map<String, Object> mapC1 = new HashMap<>();
-        mapC1.put("path", "/dashboard/analysis");
-        mapC1.put("name", "analysis");
-
-        Map<String, Object> mapC2 = new HashMap<>();
-        mapC2.put("path", "/dashboard/monitor");
-        mapC2.put("name", "monitor");
-
-        childrenList.add(mapC1);
-
-        childrenList.add(mapC2);
-
-        mapP.put("children",childrenList);
-        returnList.add(mapP);
-
-        System.out.println(returnList.toString());
     }
+
+    public static Integer[] select(Integer[] arr){
+//      每次找到最小的，与指定位置交换
+        for (int i = 0; i <arr.length ; i++) {
+
+            int mix = arr[i];
+            int mixIndex=i;
+
+            for (int j = arr.length-1; j >i ; j--) {
+                if(arr[j]<mix){
+                    mix = arr[j];
+                    mixIndex=j;
+                }
+            }
+
+
+            arr[mixIndex] = arr[i];
+            arr[i]=mix;
+        }
+
+        return arr;
+    }
+
+
+    public static void bubble(Integer[] arr){
+        int a = 0;
+        for (int i = 0; i <arr.length ; i++) {
+            for (int j = 0; j <arr.length-1-i ; j++) {
+                a++;
+                if(arr[j].compareTo(arr[j+1])>0){
+                    int emp;
+                    emp = arr[j];
+                    arr[j]=arr[j+1];
+                    arr[j+1]=emp;
+                }
+            }
+        }
+        System.out.println("内层循环次数："+a);
+    }
+
+
 
 
 }

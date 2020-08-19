@@ -31,7 +31,7 @@ public class CorsFilter implements Filter {
             throws IOException, ServletException {
 		   HttpServletRequest request = (HttpServletRequest) req;
 		   HttpServletResponse response = (HttpServletResponse) res;
-            System.out.println(request.getHeader("Origin"));
+//            System.out.println(request.getHeader("Origin"));
 		   response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
 	       response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE,PUT");
 	       //Access-Control-Allow-Headers配置允许前端提交的请求头信息
