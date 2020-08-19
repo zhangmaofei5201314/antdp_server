@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -108,9 +107,10 @@ public class LoginController {
      * @param token 1
      * @return org.springframework.web.servlet.ModelAndView
      */
-    @GetMapping("/userlogout")
+    @PostMapping("/userlogout")
+    @ResponseBody
     public void logout(String token){
-
+        System.out.println("退出登陆："+token);
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> tokenMap = (Map<String, Object>) cache.getValue(token);
         CmsUser cmsUser = (CmsUser) tokenMap.get("user");

@@ -51,10 +51,10 @@ public class Common {
         return map;
     }
 
-    public static HashMap<String,Object> insertFail(String msg){
+    public static HashMap<String,Object> insertFail(String code, String msg){
         HashMap<String,Object> map = new HashMap<String,Object>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        //map.put("code", "201");
+        map.put("code", code);
         map.put("status", "fail");
         map.put("msg", msg);
         map.put("operateTime", sdf.format(new Date()));
