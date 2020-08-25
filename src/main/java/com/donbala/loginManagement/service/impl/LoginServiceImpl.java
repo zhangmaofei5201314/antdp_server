@@ -76,6 +76,63 @@ public class LoginServiceImpl implements LoginService {
     public List<Map<String, Object>> getAntdUserMenuByCode(String usercode) {
         List<CmsMenu> menus = cmsLoginMapper.selectMenuByUsercode(usercode);
         List<Map<String, Object>> rList = new ArrayList<>();
+
+        if (menus.size()==0){
+            return rList;
+        }
+        HashMap<String, ArrayList<CmsMenu>> hashMap = new HashMap<>(32);
+        for (CmsMenu cm : menus) {
+            if (!hashMap.containsKey(cm.getParentmenuid())) {
+                hashMap.put(cm.getParentmenuid(), new ArrayList<CmsMenu>());
+            }
+            hashMap.get(cm.getParentmenuid()).add(cm);
+        }
+
+        ArrayList<CmsMenu> rootMenu = hashMap.get("0000");
+
+        for (CmsMenu cmu : rootMenu){
+            Map<String, Object> pMap = new HashMap<>();
+            pMap.put("path", cmu.getMenulink());
+            pMap.put("name", cmu.getMenucode());
+
+            pMap.put("children", resolveMenu(hashMap, cmu.getMenuid()));
+            rList.add(pMap);
+        }
+        return rList;
+    }
+
+    private List resolveMenu(HashMap<String, ArrayList<CmsMenu>> hashMap, String parentMenuId) {
+        ArrayList<CmsMenu> list = hashMap.get(parentMenuId);
+        if (list==null) {
+            return null;
+        }
+        ArrayList<Map> retList = new ArrayList<>();
+        for (CmsMenu cmsMenu : list) {
+            Map<String, Object> cMap = new HashMap<>();
+            cMap.put("path", cmsMenu.getMenulink());
+            cMap.put("name", cmsMenu.getMenucode());
+            List list1 = resolveMenu(hashMap, cmsMenu.getMenuid());
+            if (list1!=null) {
+                cMap.put("children", list1);
+            }
+            retList.add(cMap);
+        }
+        return retList;
+    }
+
+    /**
+     * 获取用户菜单
+     *  {\_/}
+     * ( ^.^ )
+     *  / > @ zhangmaofei
+     * @date 2020/8/17 9:55
+     * @param usercode 1
+     * @return java.util.List<java.util.Map<java.lang.String,java.lang.Object>>
+     */
+    /*@Override
+    public List<Map<String, Object>> getAntdUserMenuByCode(String usercode) {
+        List<CmsMenu> menus = cmsLoginMapper.selectMenuByUsercode(usercode);
+        List<Map<String, Object>> rList = new ArrayList<>();
         if(!(menus.size()==0)){
 
             for (CmsMenu cmu:menus) {
@@ -106,5 +163,5 @@ public class LoginServiceImpl implements LoginService {
 
 
         return rList;
-    }
+    }*/
 }

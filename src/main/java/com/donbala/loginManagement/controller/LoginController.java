@@ -68,6 +68,7 @@ public class LoginController {
             Map<String, Object> tokenMap = new HashMap<>();
             tokenMap.put(token, date);
             tokenMap.put("user", cmsUser);
+            // 这里存入缓存两次是为了可以通过用户名找到token和通过token获取用户等信息
             cache.addCache(token, tokenMap);
             cache.addCache(cmsUser.getUsercode(), token);
 
