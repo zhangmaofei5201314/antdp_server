@@ -70,6 +70,7 @@
              where rm.roleid in
                    (select roleid from cms_userrole ur where ur.usercode = #{usercode}))
      order by nodeorder
+
   </select>
 
 
