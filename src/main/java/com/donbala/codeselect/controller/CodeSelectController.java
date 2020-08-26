@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @CLassName: CodeSelectController
@@ -25,6 +26,12 @@ public class CodeSelectController {
     public List<CodeAndName> codeSelect(String codetype) {
         List<CodeAndName> codeAndNameList = codeSelect.codeSelect(codetype);
         return codeAndNameList;
+    }
+
+    @GetMapping("/controller/treeselect")
+    public List<Map<String, Object>> treeSelect(String codetype) {
+        List<Map<String, Object>> treeList = codeSelect.treeSelect(codetype);
+        return treeList;
     }
 
 }

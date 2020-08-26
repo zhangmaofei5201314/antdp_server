@@ -1,6 +1,7 @@
 package com.donbala.codeselect.dao;
 
 import com.donbala.codeselect.model.CodeAndName;
+import com.donbala.loginManagement.model.CmsMenu;
 
 import java.util.List;
 
@@ -16,5 +17,8 @@ public interface CodeAndNameMapper {
 
     List<CodeAndName> selectRole();
 
+    List<CodeAndName> selectMenus();
+
+    List<CmsMenu> selectMenu();
 
 }
