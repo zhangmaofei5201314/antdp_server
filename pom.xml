@@ -11,7 +11,7 @@
     <groupId>com.donbala</groupId>
     <artifactId>antdp_server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>crm_server</name>
+    <name>antdp_server</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>

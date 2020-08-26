@@ -3,6 +3,7 @@ package com.donbala.codeselect.service;
 import com.donbala.codeselect.model.CodeAndName;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @CLassName: CodeSelectIntf
@@ -13,4 +14,7 @@ import java.util.List;
  **/
 public interface CodeSelectIntf {
     List<CodeAndName> codeSelect(String codetype);
+
+
+    List<Map<String, Object>> treeSelect(String codetype);
 }

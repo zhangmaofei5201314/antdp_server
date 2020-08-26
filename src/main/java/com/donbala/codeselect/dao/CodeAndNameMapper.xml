@@ -12,7 +12,26 @@
               roleid as code , rolename as codename
               from cms_role
         </select>
-        
 
+        <select id="selectMenus" resultMap="BaseResultMap">
+              select
+              menuid as code , menuname as codename
+              from antd_menu
+        </select>
+    <!--菜单树-->
+    <select id="selectMenu" resultType="com.donbala.loginManagement.model.CmsMenu">
+    select MENUID,
+           MENUCODE,
+           MENUNAME,
+           PARENTMENUID,
+           MENULINK,
+           STATUS,
+           NODEORDER,
+           MAKEDATE,
+           MAKEUSER,
+           MODIFYDATE,
+           MODIFYUSER
+    from ANTD_MENU
+</select>
 
 </mapper>
