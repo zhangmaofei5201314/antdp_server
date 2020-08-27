@@ -9,15 +9,22 @@
         <!-- 角色下拉 -->
         <select id="selectRole" resultMap="BaseResultMap">
               select
-              roleid as code , rolename as codename
+              roleid as value , rolename as label
               from cms_role
         </select>
 
         <select id="selectMenus" resultMap="BaseResultMap">
               select
-              menuid as code , menuname as codename
+              menuid as value , menuname as label
               from antd_menu
         </select>
+        <select id="selectJobName" resultMap="BaseResultMap">
+              select
+              jobcode as value , jobname as label
+              from cf_jobdef
+        </select>
+
+
     <!--菜单树-->
     <select id="selectMenu" resultType="com.donbala.loginManagement.model.CmsMenu">
     select MENUID,

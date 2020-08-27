@@ -8,22 +8,22 @@ package com.donbala.codeselect.model;
  * @Description: todo
  **/
 public class CodeAndName {
-    private String code;
-    private String codename;
+    private String value;
+    private String label;
 
-    public String getCode() {
-        return code;
+    public String getValue() {
+        return value;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setValue(String value) {
+        this.value = value;
     }
 
-    public String getCodename() {
-        return codename;
+    public String getLabel() {
+        return label;
     }
 
-    public void setCodename(String codename) {
-        this.codename = codename;
+    public void setLabel(String label) {
+        this.label = label;
     }
 }

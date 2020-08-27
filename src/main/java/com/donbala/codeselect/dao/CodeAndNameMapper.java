@@ -21,4 +21,6 @@ public interface CodeAndNameMapper {
 
     List<CmsMenu> selectMenu();
 
+    List<CodeAndName>  selectJobName();
+
 }

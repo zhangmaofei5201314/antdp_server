@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donbala.logManage.dao.LogQueryMapper">
+    <select id="queryLog" parameterType="com.donbala.logManage.model.LogTerm" resultType="LogTerm">
+        SELECT CMS_JOBRUNLOG.SERIALNO as key ,cms_jobdef.JOBNAME,to_char(CMS_JOBRUNLOG.STARTDATE,'YYYY-MM-DD HH24:MI:SS') as startDate,to_char(CMS_JOBRUNLOG.ENDDATE,'YYYY-MM-DD HH24:MI:SS') as endDate,CMS_JOBRUNLOG.RUNSTATE,
+        CMS_JOBRUNLOG.RUNRESULT,to_char(CMS_JOBRUNLOG.MAKEDATE,'YYYY-MM-DD HH24:MI:SS') as makeDate,CMS_JOBRUNLOG.MAKEUSER,to_char(CMS_JOBRUNLOG.MODIFYDATE,'YYYY-MM-DD HH24:MI:SS') as modifyDate,CMS_JOBRUNLOG.MODIFYUSER
+        FROM CMS_JOBRUNLOG,cms_jobdef  where CMS_JOBRUNLOG.JOBCODE=CMS_JOBDEF.JOBCODE
+        <if test="jobCode != null and jobCode != ''">
+            AND CMS_JOBDEF.JOBCODE=#{jobCode}
+        </if>
+        <if test="runState != null and runState != ''">
+            AND CMS_JOBRUNLOG.RUNSTATE=#{runstate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND CMS_JOBRUNLOG.ENDDATE <![CDATA[<=]]> to_date(#{endDate},'YYYY-MM-DD HH24:MI:SS')
+        </if>
+        <if test="startDate != null and startDate != ''">
+            AND CMS_JOBRUNLOG.STARTDATE >= to_date(#{startDate},'YYYY-MM-DD HH24:MI:SS')
+        </if> order by CMS_JOBRUNLOG.STARTDATE desc 
+    </select>
+</mapper>
