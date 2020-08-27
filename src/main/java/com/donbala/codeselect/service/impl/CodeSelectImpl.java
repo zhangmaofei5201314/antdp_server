@@ -35,6 +35,8 @@ public class CodeSelectImpl implements CodeSelectIntf {
             codeAndNameList = getRoleList();
         }else if (codetype.equals("menu")){
             codeAndNameList = getRoleList();
+        }else if (codetype.equals("job")){
+            codeAndNameList = getJobName();
         }
 
         return codeAndNameList;
@@ -51,6 +53,11 @@ public class CodeSelectImpl implements CodeSelectIntf {
      */
     private List<CodeAndName> getRoleList() {
         List<CodeAndName> codeAndNameList = codeAndNameMapper.selectRole() ;
+        return codeAndNameList;
+    }
+
+    private List<CodeAndName> getJobName(){
+        List<CodeAndName> codeAndNameList = codeAndNameMapper.selectJobName() ;
         return codeAndNameList;
     }
 
