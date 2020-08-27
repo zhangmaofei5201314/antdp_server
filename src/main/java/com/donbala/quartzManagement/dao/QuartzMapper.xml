@@ -2,6 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.donbala.quartzManagement.dao.QuartzMapper">
     <resultMap type="com.donbala.quartzManagement.model.Quartz" id="BaseResultMap">
+		<result column="key" property="key" jdbcType="VARCHAR"/>
         <result column="jobCode" property="jobCode" jdbcType="VARCHAR"/>
         <result column="jobClassName" property="jobClassName" jdbcType="VARCHAR"/>
         <result column="jobName" property="jobName" jdbcType="VARCHAR"/>
@@ -32,6 +33,7 @@
 		SELECT (SELECT D.jobname FROM CMS_JOBDEF D WHERE D.jobcode = T.jobcode) jobname,
 			   jobcode,
 			   jobplancode,
+			   jobplancode key,
 			   jobplandesc,
 			   repeatinterval,
 			   (SELECT codename
@@ -66,11 +68,6 @@
 		 ORDER BY T.makedate DESC
 	</select>
 	
-	<!-- 查询全部批处理运行日志 -->
-	<select id="getAllJobRunLog" resultMap="BaseResultMap">
-		SELECT serialno, jobcode, jobplancode, startdate, enddate, runstate, result, makedate, makeuser, modifydate, modifyuser FROM CMS_JOBRUNLOG;
-	</select>
-	
 	<!-- 查询可用的任务执行计划 -->
 	<select id="getAvailableJobPlan" resultMap="BaseResultMap">
 		SELECT jobcode,
@@ -87,8 +84,22 @@
 	<!-- 查询作业参数 -->
 	<select id="selectJobParam" resultMap="BaseResultMap" parameterType="com.donbala.quartzManagement.model.Quartz">
 		SELECT jobcode, paramcode, paramname,
-		(SELECT jobclassname FROM CF_JOBDEF D WHERE D.jobcode = T.jobcode) jobclassname
-		 FROM CF_JOBPARAMDEF T WHERE T.jobcode = #{jobCode}
+		(SELECT jobclassname FROM CMS_JOBDEF D WHERE D.jobcode = T.jobcode) jobclassname
+		 FROM CMS_JOBPARAMDEF T WHERE T.jobcode = #{jobCode}
 	</select>
+
+	<!-- 新增作业计划 -->
+	<insert id="insertJobPlanDef"  parameterType="com.donbala.quartzManagement.model.Quartz">
+		INSERT INTO CMS_JOBPLANDEF  (JOBPLANCODE,JOBCODE,JOBPLANDESC,RUNTYPE,REPEATINTERVAL,REPEATUNIT,STARTDATE,ENDDATE,USEFLAG,TRIGGERSTATE,
+    		MAKEDATE,MAKEUSER,MODIFYDATE,MODIFYUSER,CRONEXP)
+      	VALUES(#{jobPlanCode},#{jobCode},#{jobPlanDesc},#{runType},#{repeatInterval},#{repeatUnit},TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss'),TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss'),#{useFlag},#{triggerState},
+      		TO_DATE(#{makeDate},'yyyy-mm-dd hh24:mi:ss'),#{makeUser},TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),#{modifyUser},#{cronExp})
+	</insert>
+	<!-- 记录作业计划参数 -->
+	<insert id="insertJobPlanParam" parameterType="com.donbala.quartzManagement.model.Quartz">
+		INSERT INTO CMS_JOBPLANPARAM (JOBCODE,JOBPLANCODE,PARAMCODE,PARAMVALUE,MAKEDATE,MAKEUSER,MODIFYDATE,MODIFYUSER)
+			values(#{jobCode},#{jobPlanCode},#{paramCode},#{paramValue},TO_DATE(#{makeDate},'yyyy-mm-dd hh24:mi:ss'),
+			#{makeUser},TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),#{modifyUser})
+	</insert>
 
 </mapper>

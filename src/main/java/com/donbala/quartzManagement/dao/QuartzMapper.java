@@ -1,34 +1,30 @@
 package com.donbala.quartzManagement.dao;
 
-import com.donbala.quartzManagement.model.JobRunLog;
 import com.donbala.quartzManagement.model.Quartz;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-import java.util.Map;
 
 @Mapper
 public interface QuartzMapper {
 
     // 获取全部任务执行计划
     List<Quartz> getAllJobPlan();
-    // 查询全部批处理运行日志
-    List<JobRunLog> getAllJobRunLog();
     // 查询可用的任务执行计划
     List<Quartz> getAvailableJobPlan();
     // 查询作业参数
     List<Quartz> selectJobParam(Quartz qz);
+    // 新增作业计划
+    int insertJobPlanDef(Quartz qz);
+    // 记录作业计划参数
+    int insertJobPlanParam(Quartz qz);
 
 //    int selectJobPlanCount(Quartz qz);
 //    List<Quartz> selectJobName();
 //    List<Quartz> selectRepeatUnit();
 //    // 查询作业参数
 
-//    // 新增作业计划
-//    int insertJobPlanDef(Quartz qz);
-//    // 记录作业计划参数
-//    int insertJobPlanParam(Quartz qz);
+
 //    // 删除任务
 //    int deleteJobPlanDef(Map<String, String> map);
 //    // 删除任务参数

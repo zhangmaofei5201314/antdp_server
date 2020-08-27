@@ -25,6 +25,7 @@ public class Quartz extends BaseResult {
     private String cronExpDesc;     // Cron描述
     private String repeatInterval;  // 循环间隔数值
     private String repeatUnit;      // 执行频率（循环单位）
+    private String key;             // 唯一键
 
     private String startDate;       // 任务生效日期
     private String endDate;         // 任务失效日期
@@ -40,6 +41,18 @@ public class Quartz extends BaseResult {
     private String paramEndDate;
     private String runState;
     private String IP;
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
 
     public String getIP() {
         return IP;
