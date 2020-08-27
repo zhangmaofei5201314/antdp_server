@@ -1,20 +1,25 @@
 package com.donbala.quartzManagement.service.impl;
 
 import ch.qos.logback.classic.Logger;
+import com.donbala.Commons.controller.Common;
 import com.donbala.quartzManagement.MyTriggerListener;
 import com.donbala.quartzManagement.dao.QuartzMapper;
-import com.donbala.quartzManagement.model.JobRunLog;
 import com.donbala.quartzManagement.model.Quartz;
 import com.donbala.quartzManagement.service.QuartzServiceIntf;
+import com.donbala.quartzManagement.util.QuartzUtils;
+import com.donbala.util.DateUtil;
 import org.quartz.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @Author: RedRush
@@ -29,34 +34,12 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
 
     public final static Logger log = (Logger) LoggerFactory.getLogger(QuartzServiceImpl.class);
 
-    @Autowired
+    @Resource
     private QuartzMapper quartzMapper;
 
     @Autowired
     private SchedulerFactoryBean schedulerFactoryBean;
 
-    /**
-     * @Author: RedRush
-     * @Date:   2020/8/25 9:56
-     * @description: 获取所有的定时任务，添加至调度器中
-     */
-    @Override
-    public void initJobsOnstart() {
-        log.info("开始初始化所有批处理任务");
-        List<Quartz> quartzList = quartzMapper.getAvailableJobPlan();
-        if (quartzList.size() > 0){
-            //遍历任务列表
-            for (Quartz quartz : quartzList) {
-                // 将任务添加至调度器中
-                try {
-                    addQuartz(quartz);
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-            log.info("任务调度初始化完成");
-        }
-    }
 
     /**
      * @Author: RedRush
@@ -66,11 +49,6 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     @Override
     public List<Quartz> getJobPlanList() {
         return quartzMapper.getAllJobPlan();
-    }
-
-    @Override
-    public List<JobRunLog> getJobRunLogList() {
-        return quartzMapper.getAllJobRunLog();
     }
 
     /**
@@ -86,7 +64,69 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
+    public Map<String, Object> insertJobAndParam(Quartz quartz) {
+        // ParamValue参数非空判断
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+            return basicMapBuilder("warning", "参数为空", "502");
+        }
+        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
+        String[] paramValues = quartz.getParamValue().split(",");
+        // paramvalue中有多个参数，默认第一个参数为IP
+//        String localIP = DateUtil.getLocalHostIP();
+//        if (!localIP.equals(paramValues[0])){
+//            return basicMapBuilder("ipError", "IP异常", "502");
+//        }
+        // 获取当前日期字符串
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        if (quartz.getStartDate() == null || "".equals(quartz.getStartDate())){ // 如果任务开始日期为空，则赋值为当前时间
+            quartz.setStartDate(dateStr);
+        }
+        if (quartz.getEndDate() == null || "".equals(quartz.getEndDate())){ // 如果任务结束日期为空，则赋值为无穷
+            quartz.setStartDate("9999-12-31 00:00:00");
+        }
+        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+        quartz.setJobPlanCode(uuid);
+        quartz.setMakeDate(dateStr);
+        quartz.setModifyDate(dateStr);
+        // 新增作业计划时，默认设置为停止，需要手动启动
+        quartz.setUseFlag("0");         // 是否启用，0-停止，1-启动
+        quartz.setTriggerState("0");    // 运行状态，0-停止，1-启动
+        // 算出cron表达式，存放到数据库中
+        quartz.setCronExp(QuartzUtils.cron(quartz));
+        quartz.setRunType("0");         // 设置任务类型，0-cron任务
+        quartzMapper.insertJobPlanDef(quartz);
+        List<Quartz> paramList = quartzMapper.selectJobParam(quartz);
+        for (String paramValue : paramValues) {
+            String[] valueInfo = paramValue.split(":");
+            for (Quartz param: paramList) {
+                if (param.getParamCode().equals(valueInfo[0])){
+                    quartz.setParamCode(param.getParamCode());
+                    quartz.setParamValue(valueInfo[1]);
+                    quartzMapper.insertJobPlanParam(quartz);
+                    System.out.println(quartz.getParamCode() + "," + quartz.getParamValue());
+                }
+            }
+        }
+        // 将新生成的作业添加到调度里，开始执行作业
+        //Common.addQuartz(quartz, quartzService);
+        return basicMapBuilder("success", "执行计划新增成功", "200");
+    }
+
+    @Override
     public Map<String, Object> removeJob(Quartz quartz) {
+        // ParamValue参数非空判断
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+            return basicMapBuilder("warning", "参数为空", "502");
+        }
+        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
+        String[] paramValues = quartz.getParamValue().split(",");
+        // paramvalue中有多个参数，默认第一个参数为IP
+//        String localIP = DateUtil.getLocalHostIP();
+//        if (!localIP.equals(paramValues[0])){
+//            return basicMapBuilder("ipError", "IP异常", "502");
+//        }
+
         return null;
     }
 
@@ -101,17 +141,12 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     }
 
     @Override
-    public Map<String, Object> insertJobAndParam(Quartz quartz) {
+    public Map<String, Object> selectReturnView(Quartz quartz) {
         return null;
     }
 
     @Override
     public Map<String, Object> updateJobPlanAndParam(Quartz quartz) {
-        return null;
-    }
-
-    @Override
-    public Map<String, Object> selectReturnView(Quartz quartz) {
         return null;
     }
 
@@ -122,11 +157,49 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
      */
     public void addQuartz(Quartz quartz) throws Exception {
         // 根据jobPlanCode确定唯一的作业名称，作业组名，触发器名称，触发器组名
-        // 获取作业code
-        String jobCode = quartz.getJobCode();
-        // 获取作业计划code
-        String jobPlanCode = quartz.getJobPlanCode();
+        String jobCode = quartz.getJobCode();           // 获取作业code
+        String jobPlanCode = quartz.getJobPlanCode();   // 获取作业计划code
+        String runType = quartz.getRunType();           // 获取任务类别(0为定时任务，1为指定间隔任务)
+        String className = quartz.getJobClassName();    // 获取要执行的job类名
+        Class<?> clazz = Class.forName(className);      // 根据job类名生成Class类
+        // 加载日期格式化工具，并格式化起止日期
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date startDate = sdf.parse(quartz.getStartDate());
+        Date endDate = sdf.parse(quartz.getEndDate());
+        if ("0".equals(runType)){           // cron定时任务
+            // 根据quartz生成cron表达式
+            String cron = QuartzUtils.cron(quartz);
+            log.info(cron);                                 // 日志记录cron表达式
+            addJob_Timer(jobCode, jobPlanCode, jobPlanCode, jobPlanCode, clazz, cron, startDate, endDate);
+        } else if ("1".equals(runType)){    // 指定间隔任务
+            long interval = getInterval(Integer.parseInt(quartz.getRepeatInterval()),quartz.getRepeatUnit());
+            addJob_Interval(jobCode, jobPlanCode, jobPlanCode, jobPlanCode, clazz, interval, startDate, endDate);
+        }
     }
+
+
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/25 9:56
+     * @description: 获取所有的定时任务，添加至调度器中
+     */
+//    @Override
+//    public void initJobsOnstart() {
+//        log.info("开始初始化所有批处理任务");
+//        List<Quartz> quartzList = quartzMapper.getAvailableJobPlan();
+//        if (quartzList.size() > 0){
+//            //遍历任务列表
+//            for (Quartz quartz : quartzList) {
+//                // 将任务添加至调度器中
+//                try {
+//                    addQuartz(quartz);
+//                } catch (Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+//            log.info("任务调度初始化完成");
+//        }
+//    }
 
     /**
      * @Author: RedRush
@@ -228,13 +301,13 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
      * @Author: RedRush
      * @Date:   2020/8/25 11:25
      * @description: 获取执行间隔，单位超过'天'的,建议使用cron
-     * @params: qz
-     * @return: int
+     * @params:
+     *      repeatInterval  循环数值
+     *      repeatUnit      循环单位(1-秒，2-分钟，3-小时，4-天，5-月，6-周)
+     * @return: long
      */
-    public long getInterval(Quartz quartz){
+    public long getInterval(int repeatInterval, String repeatUnit){
         long interval = 0L;
-        int repeatInterval= Integer.parseInt(quartz.getRepeatInterval());
-        String repeatUnit = quartz.getRepeatUnit();
         switch (repeatUnit){
             case "1":
                 interval=repeatInterval*1000;
@@ -256,6 +329,24 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
                 break;
         }
         return interval;
+    }
+
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/27 11:15
+     * @description: 错误信息生成
+     * @param:
+     *      status      任务状态
+     *      msg         返回错误信息
+     *      code        错误码
+     * @return: Map<String, Object>
+     */
+    public Map<String, Object> basicMapBuilder(String status, String msg, String code){
+        Map<String,Object> returnMap = new HashMap<>();
+        returnMap.put("status", status);
+        returnMap.put("msg", msg);
+        returnMap.put("code", code);
+        return returnMap;
     }
 
 }
