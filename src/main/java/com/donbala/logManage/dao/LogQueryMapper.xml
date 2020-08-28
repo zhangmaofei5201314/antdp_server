@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.donbala.logManage.dao.LogQueryMapper">
-    <select id="queryLog" parameterType="com.donbala.logManage.model.LogTerm" resultType="LogTerm">
+    <select id="queryLog" parameterType="com.donbala.logManage.model.LogTerm" resultType="com.donbala.logManage.model.LogTerm">
         SELECT CMS_JOBRUNLOG.SERIALNO as key ,cms_jobdef.JOBNAME,to_char(CMS_JOBRUNLOG.STARTDATE,'YYYY-MM-DD HH24:MI:SS') as startDate,to_char(CMS_JOBRUNLOG.ENDDATE,'YYYY-MM-DD HH24:MI:SS') as endDate,CMS_JOBRUNLOG.RUNSTATE,
         CMS_JOBRUNLOG.RUNRESULT,to_char(CMS_JOBRUNLOG.MAKEDATE,'YYYY-MM-DD HH24:MI:SS') as makeDate,CMS_JOBRUNLOG.MAKEUSER,to_char(CMS_JOBRUNLOG.MODIFYDATE,'YYYY-MM-DD HH24:MI:SS') as modifyDate,CMS_JOBRUNLOG.MODIFYUSER
         FROM CMS_JOBRUNLOG,cms_jobdef  where CMS_JOBRUNLOG.JOBCODE=CMS_JOBDEF.JOBCODE
