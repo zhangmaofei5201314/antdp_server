@@ -23,6 +23,10 @@ public interface QuartzMapper {
     int deleteJobPlanDef(String jobPlanCode);
     // 删除任务参数
     int deleteJobPlanParam(String jobPlanCode);
+    // 修改作业任务
+    int updateJobPlan(Quartz qz);
+    // 删除作业参数
+    int deletePlanParam(Quartz qz);
     // 变更作业状态为启动
     int startJobPlanDef(String jobPlanCode);
     // 变更作业状态为停止
@@ -41,18 +45,6 @@ public interface QuartzMapper {
 //    List<Quartz> selectJobName();
 //    List<Quartz> selectRepeatUnit();
 //    // 查询作业参数
-
-
-
-
-
-
-
-//    // 删除作业参数
-//    int deletePlanParam(Quartz qz);
-//    // 修改作业任务
-//    int updateJobPlan(Quartz qz);
-
 //    // 更新任务执行日志
 //    void updateJobRunLog(Map<String, String> map);
 //    // 查询运行日志的流水号，以后应该不用，暂时保留日后优化

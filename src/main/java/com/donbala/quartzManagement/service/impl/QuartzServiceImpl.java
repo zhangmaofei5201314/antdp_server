@@ -271,10 +271,46 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
         }
         // 初始化修改日期
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        quartz.setModifyDate(date);
-
-
-        return null;
+        quartz.setModifyDate(date);     // 设置更改日期
+        quartz.setUseFlag("0");         // 作业计划-停止状态
+        quartz.setTriggerState("1");    // 运行状态-等待运行
+        // 生成cron指令
+        quartz.setCronExp(QuartzUtils.cron(quartz));
+        quartzMapper.updateJobPlan(quartz);
+        quartzMapper.deletePlanParam(quartz);
+        List<Quartz> paramList = quartzMapper.selectJobParam(quartz);
+        for (String paramValue : paramValues) {
+            String[] valueInfo = paramValue.split(":");
+            for (Quartz param: paramList) {
+                if (param.getParamCode().equals(valueInfo[0])){
+                    quartz.setParamCode(param.getParamCode());
+                    quartz.setParamValue(valueInfo[1]);
+                    quartzMapper.insertJobPlanParam(quartz);
+                    System.out.println(quartz.getParamCode() + "," + quartz.getParamValue());
+                }
+            }
+        }
+        // 创建resultMap，获取jobPlanCode
+        Map<String,Object> resultMap = new HashMap<>();
+        String jobPlanCode = quartz.getJobPlanCode();
+        try {
+            // 创建调度容器，根据jonPlanCode生成触发器key
+            Scheduler scheduler = schedulerFactoryBean.getScheduler();
+            TriggerKey triggerKey = TriggerKey.triggerKey(jobPlanCode, jobPlanCode);
+            // 根据触发器的key，停止触发器，移除触发器，删除任务
+            scheduler.pauseTrigger(triggerKey);     // 停止触发器
+            scheduler.unscheduleJob(triggerKey);    // 移除触发器
+            scheduler.deleteJob(JobKey.jobKey(jobPlanCode, jobPlanCode));   //删除任务
+            resultMap = basicMapBuilder("success", "执行计划修改成功", "200");
+        } catch (Exception e){
+            e.printStackTrace();
+            resultMap = basicMapBuilder("failed", "执行计划更新失败", "500");
+        }
+        // 查询计划运行状态,并添加到resultMap中
+        String runState = quartzMapper.selectJobPlanState(jobPlanCode).getRunState();
+        resultMap.put("runState", runState);
+        resultMap.put("jobPlanCode", jobPlanCode);
+        return resultMap;
     }
 
     /**
@@ -404,7 +440,6 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
                             .repeatForever()                        // 永远的执行下去
                             .withMisfireHandlingInstructionNextWithRemainingCount() // 重复次数
                             //.withMisfireHandlingInstructionNextWithExistingCount()
-
             );
             // 创建Trigger对象和TriggerListener
 //            CronTrigger trigger = (CronTrigger) triggerBuilder.build();   // 基于日历的作业调度器

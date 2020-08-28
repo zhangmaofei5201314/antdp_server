@@ -117,6 +117,18 @@
 	<update id="stopJobPlanDef" parameterType="string" >
 		UPDATE  CMS_JOBPLANDEF  SET USEFLAG = '0',TRIGGERSTATE='0' WHERE JOBPLANCODE = #{jobPlanCode}
 	</update>
+	<!--修改作业任务-->
+	<update id="updateJobPlan" parameterType="com.donbala.quartzManagement.model.Quartz" >
+		UPDATE CMS_JOBPLANDEF SET JOBCODE=#{jobCode},JOBPLANDESC=#{jobPlanDesc},REPEATINTERVAL=#{repeatInterval},
+		REPEATUNIT=#{repeatUnit},STARTDATE=TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss'),ENDDATE=TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss'),
+		USEFLAG=#{useFlag},TRIGGERSTATE=#{triggerState},
+		MODIFYDATE=TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),MODIFYUSER=#{modifyUser},CRONEXP=#{cronExp}
+		where JOBPLANCODE=#{jobPlanCode}
+	</update>
+	<!--删除作业参数-->
+	<delete id="deletePlanParam" parameterType="com.donbala.quartzManagement.model.Quartz" >
+		delete from CMS_JOBPLANPARAM where jobplancode= #{jobPlanCode}
+	</delete>
 	<!--查询作业内容，job类名-->
 	<select id="selectJobPlanClass" parameterType="string" resultMap = "BaseResultMap">
 		SELECT D.*,T.JOBCLASSNAME FROM CMS_JOBPLANDEF D,CMS_JOBDEF T
