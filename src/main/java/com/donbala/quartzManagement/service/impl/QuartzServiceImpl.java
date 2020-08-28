@@ -1,13 +1,11 @@
 package com.donbala.quartzManagement.service.impl;
 
 import ch.qos.logback.classic.Logger;
-import com.donbala.Commons.controller.Common;
 import com.donbala.quartzManagement.MyTriggerListener;
 import com.donbala.quartzManagement.dao.QuartzMapper;
 import com.donbala.quartzManagement.model.Quartz;
 import com.donbala.quartzManagement.service.QuartzServiceIntf;
 import com.donbala.quartzManagement.util.QuartzUtils;
-import com.donbala.util.DateUtil;
 import org.quartz.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +61,11 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
         return quartzMapper.selectJobParam(quartz);
     }
 
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/28 9:45
+     * @description: 新增作业计划
+     */
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Map<String, Object> insertJobAndParam(Quartz quartz) {
@@ -113,7 +116,13 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
         return basicMapBuilder("success", "执行计划新增成功", "200");
     }
 
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/28 9:46
+     * @description: 删除一个任务
+     */
     @Override
+    @Transactional(isolation= Isolation.READ_COMMITTED,propagation= Propagation.REQUIRED)
     public Map<String, Object> removeJob(Quartz quartz) {
         // ParamValue参数非空判断
         if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
@@ -126,28 +135,182 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
 //        if (!localIP.equals(paramValues[0])){
 //            return basicMapBuilder("ipError", "IP异常", "502");
 //        }
-
-        return null;
+        try {
+            // 提取出jobPlanCode，放入map，并根据jobPlanCode删除任务和任务参数
+            String jobPlanCode = quartz.getJobPlanCode();
+            quartzMapper.deleteJobPlanDef(jobPlanCode);
+            quartzMapper.deleteJobPlanParam(jobPlanCode);
+            // 创建调度容器,并根据jobPlanCode生成触发器key
+            Scheduler  scheduler = schedulerFactoryBean.getScheduler();
+            TriggerKey triggerKey = TriggerKey.triggerKey(jobPlanCode, jobPlanCode);
+            // 根据触发器key值，停止对应的触发器，移除该触发器，删除该任务
+            scheduler.pauseTrigger(triggerKey);         // 停止触发器
+            scheduler.unscheduleJob(triggerKey);        // 移除触发器
+            scheduler.deleteJob(JobKey.jobKey(jobPlanCode, jobPlanCode));   // 删除任务
+            return basicMapBuilder("success", "删除作业成功", "200");
+        } catch (Exception e){
+            e.printStackTrace();
+            return basicMapBuilder("failed", "删除作业失败","500");
+        }
     }
 
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/28 10:01
+     * @description: 启动一个任务
+     */
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Map<String, Object> startJob(Quartz quartz) {
-        return null;
+        // ParamValue参数非空判断
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+            return basicMapBuilder("warning", "参数为空", "502");
+        }
+        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
+        String[] paramValues = quartz.getParamValue().split(",");
+        // paramvalue中有多个参数，默认第一个参数为IP
+//        String localIP = DateUtil.getLocalHostIP();
+//        if (!localIP.equals(paramValues[0])){
+//            retburn basicMapBuilder("ipError", "IP异常", "502");
+//        }
+        // 提取jobPlanCode,获取作业数据
+        String jobPlanCode = quartz.getJobPlanCode();
+        Quartz queryQt = quartzMapper.selectJobPlanClass(jobPlanCode);  // 查询作业内容，job类名
+        Map<String, Object> resultMap = new HashMap<>();
+        try {
+            // 将任务添加至调度器中,修改作业状态为启动
+            addQuartz(queryQt);
+            quartzMapper.startJobPlanDef(jobPlanCode);
+            resultMap = basicMapBuilder("success", "作业启动成功", "200");
+        } catch (Exception e){
+            resultMap = basicMapBuilder("failed", "作业启动失败", "500");
+        }
+        // 查询计划运行状态,并添加到resultMap中
+        String runState = quartzMapper.selectJobPlanState(jobPlanCode).getRunState();
+        resultMap.put("runState", runState);
+        resultMap.put("jobPlanCode", jobPlanCode);
+        return resultMap;
     }
 
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/28 10:41
+     * @description: 停止一个任务
+     */
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Map<String, Object> stopJob(Quartz quartz) {
-        return null;
+        // ParamValue参数非空判断
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+            return basicMapBuilder("warning", "参数为空", "502");
+        }
+        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
+        String[] paramValues = quartz.getParamValue().split(",");
+        // paramvalue中有多个参数，默认第一个参数为IP
+//        String localIP = DateUtil.getLocalHostIP();
+//        if (!localIP.equals(paramValues[0])){
+//            retburn basicMapBuilder("ipError", "IP异常", "502");
+//        }
+        // 获取jobPlanCode，创建调度容器，根据jonPlanCode生成触发器key
+        String jobPlanCode = quartz.getJobPlanCode();
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+        TriggerKey triggerKey = TriggerKey.triggerKey(jobPlanCode, jobPlanCode);
+        Map<String,Object> resultMap = new HashMap<>();
+        try {
+            // 根据触发器的key，停止触发器，移除触发器，删除任务
+            scheduler.pauseTrigger(triggerKey);     // 停止触发器
+            scheduler.unscheduleJob(triggerKey);    // 移除触发器
+            scheduler.deleteJob(JobKey.jobKey(jobPlanCode, jobPlanCode));   //删除任务
+            // 修改作业状态为停止
+            quartzMapper.stopJobPlanDef(jobPlanCode);
+        } catch (Exception e){
+            e.printStackTrace();
+            resultMap = basicMapBuilder("success", "停止作业成功", "500");
+        }
+        // 查询计划运行状态,并添加到resultMap中
+        String runState = quartzMapper.selectJobPlanState(jobPlanCode).getRunState();
+        resultMap.put("runState", runState);
+        resultMap.put("jobPlanCode", jobPlanCode);
+        return resultMap;
     }
 
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/28 11:01
+     * @description: 计划回显
+     */
     @Override
     public Map<String, Object> selectReturnView(Quartz quartz) {
-        return null;
+        Map<String,Object> map=new HashMap<String,Object>();
+        map.put("returnView", quartzMapper.selectReturnView(quartz));
+        map.put("paramByCode", quartzMapper.selectParamByCode(quartz));
+        return map;
     }
 
+    /**
+     * @Author: RedRush
+     * @Date:   2020/8/28 11:17
+     * @description: 修改一个任务
+     */
     @Override
     public Map<String, Object> updateJobPlanAndParam(Quartz quartz) {
-        return null;
+        // ParamValue参数非空判断
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+            return basicMapBuilder("warning", "参数为空", "502");
+        }
+        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
+        String[] paramValues = quartz.getParamValue().split(",");
+        // paramvalue中有多个参数，默认第一个参数为IP
+//        String localIP = DateUtil.getLocalHostIP();
+//        if (!localIP.equals(paramValues[0])){
+//            return basicMapBuilder("ipError", "IP异常", "502");
+//        }
+        // 任务结束日期校验
+        if (quartz.getEndDate() == null || "".equals(quartz.getEndDate())){ // 如果任务结束日期为空，则赋值为无穷
+            quartz.setStartDate("9999-12-31 00:00:00");
+        }
+        // 初始化修改日期
+        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        quartz.setModifyDate(date);     // 设置更改日期
+        quartz.setUseFlag("0");         // 作业计划-停止状态
+        quartz.setTriggerState("1");    // 运行状态-等待运行
+        // 生成cron指令
+        quartz.setCronExp(QuartzUtils.cron(quartz));
+        quartzMapper.updateJobPlan(quartz);
+        quartzMapper.deletePlanParam(quartz);
+        List<Quartz> paramList = quartzMapper.selectJobParam(quartz);
+        for (String paramValue : paramValues) {
+            String[] valueInfo = paramValue.split(":");
+            for (Quartz param: paramList) {
+                if (param.getParamCode().equals(valueInfo[0])){
+                    quartz.setParamCode(param.getParamCode());
+                    quartz.setParamValue(valueInfo[1]);
+                    quartzMapper.insertJobPlanParam(quartz);
+                    System.out.println(quartz.getParamCode() + "," + quartz.getParamValue());
+                }
+            }
+        }
+        // 创建resultMap，获取jobPlanCode
+        Map<String,Object> resultMap = new HashMap<>();
+        String jobPlanCode = quartz.getJobPlanCode();
+        try {
+            // 创建调度容器，根据jonPlanCode生成触发器key
+            Scheduler scheduler = schedulerFactoryBean.getScheduler();
+            TriggerKey triggerKey = TriggerKey.triggerKey(jobPlanCode, jobPlanCode);
+            // 根据触发器的key，停止触发器，移除触发器，删除任务
+            scheduler.pauseTrigger(triggerKey);     // 停止触发器
+            scheduler.unscheduleJob(triggerKey);    // 移除触发器
+            scheduler.deleteJob(JobKey.jobKey(jobPlanCode, jobPlanCode));   //删除任务
+            resultMap = basicMapBuilder("success", "执行计划修改成功", "200");
+        } catch (Exception e){
+            e.printStackTrace();
+            resultMap = basicMapBuilder("failed", "执行计划更新失败", "500");
+        }
+        // 查询计划运行状态,并添加到resultMap中
+        String runState = quartzMapper.selectJobPlanState(jobPlanCode).getRunState();
+        resultMap.put("runState", runState);
+        resultMap.put("jobPlanCode", jobPlanCode);
+        return resultMap;
     }
 
     /**
@@ -277,7 +440,6 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
                             .repeatForever()                        // 永远的执行下去
                             .withMisfireHandlingInstructionNextWithRemainingCount() // 重复次数
                             //.withMisfireHandlingInstructionNextWithExistingCount()
-
             );
             // 创建Trigger对象和TriggerListener
 //            CronTrigger trigger = (CronTrigger) triggerBuilder.build();   // 基于日历的作业调度器

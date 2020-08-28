@@ -25,7 +25,7 @@ import java.util.Map;
 @RestController
 public class JobplanController {
 
-    public final static Logger log = (Logger) LoggerFactory.getLogger(LoginController.class);
+    public final static Logger log = (Logger) LoggerFactory.getLogger(JobplanController.class);
 
     @Autowired
     private QuartzServiceIntf quartzServiceIntf;
@@ -59,7 +59,7 @@ public class JobplanController {
      * @description: 新建任务
      */
     @RequestMapping(value = "/controller/quartz/management/insertJob", method = RequestMethod.POST)
-    public Map<String, Object> insertJobPlan(Quartz quartz, HttpSession session){
+    public Map<String, Object> insertJobPlan(Quartz quartz){
         String userName = cmsUserServiceIntf.getUserByToken(quartz.getToken()).getName();
         quartz.setMakeUser(userName);
         quartz.setModifyUser(userName);
@@ -72,7 +72,7 @@ public class JobplanController {
      * @description: 删除任务
      */
     @RequestMapping(value = "/controller/quartz/management/deleteJob", method = RequestMethod.POST)
-    public Map<String, Object> deleteJobPlan(Quartz quartz, HttpSession httpSession){
+    public Map<String, Object> deleteJobPlan(Quartz quartz){
         String userName = cmsUserServiceIntf.getUserByToken(quartz.getToken()).getName();
         quartz.setMakeUser(userName);
         quartz.setModifyUser(userName);
@@ -85,7 +85,7 @@ public class JobplanController {
      * @description: 启动任务
      */
     @RequestMapping(value = "/controller/quartz/management/startJob", method = RequestMethod.POST)
-    public Map<String, Object> startJobPlan(Quartz quartz, HttpSession httpSession){
+    public Map<String, Object> startJobPlan(Quartz quartz){
         String userName = cmsUserServiceIntf.getUserByToken(quartz.getToken()).getName();
         quartz.setMakeUser(userName);
         quartz.setModifyUser(userName);
@@ -98,7 +98,7 @@ public class JobplanController {
      * @description: 停止任务
      */
     @RequestMapping(value = "/controller/quartz/management/stopJob", method = RequestMethod.POST)
-    public Map<String, Object> stopJobPlan(Quartz quartz, HttpSession httpSession){
+    public Map<String, Object> stopJobPlan(Quartz quartz){
         String userName = cmsUserServiceIntf.getUserByToken(quartz.getToken()).getName();
         quartz.setMakeUser(userName);
         quartz.setModifyUser(userName);
@@ -121,7 +121,7 @@ public class JobplanController {
      * @description: 修改计划
      */
     @RequestMapping(value = "/controller/quartz/management/editJob", method = RequestMethod.POST)
-    public Map<String, Object> editJobPlan(Quartz quartz, HttpSession httpSession){
+    public Map<String, Object> editJobPlan(Quartz quartz){
         String userName = cmsUserServiceIntf.getUserByToken(quartz.getToken()).getName();
         quartz.setMakeUser(userName);
         quartz.setModifyUser(userName);
