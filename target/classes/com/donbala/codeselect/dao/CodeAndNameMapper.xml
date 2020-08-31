@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donbala.codeselect.dao.CodeAndNameMapper">
+        <resultMap id="BaseResultMap" type="com.donbala.codeselect.model.CodeAndName">
+            <result column="code" jdbcType="VARCHAR" property="code" />
+            <result column="codename" jdbcType="VARCHAR" property="codename" />
+        </resultMap>
+
+        <!-- 角色下拉 -->
+        <select id="selectRole" resultMap="BaseResultMap">
+              select
+              roleid as value , rolename as label
+              from cms_role
+        </select>
+
+        <select id="selectMenus" resultMap="BaseResultMap">
+              select
+              menuid as value , menuname as label
+              from antd_menu
+        </select>
+        <select id="selectJobName" resultMap="BaseResultMap">
+              select
+              jobcode as value , jobname as label
+              from cf_jobdef
+        </select>
+
+
+    <!--菜单树-->
+    <select id="selectMenu" resultType="com.donbala.loginManagement.model.CmsMenu">
+    select MENUID,
+           MENUCODE,
+           MENUNAME,
+           PARENTMENUID,
+           MENULINK,
+           STATUS,
+           NODEORDER,
+           MAKEDATE,
+           MAKEUSER,
+           MODIFYDATE,
+           MODIFYUSER
+    from ANTD_MENU
+</select>
+
+</mapper>

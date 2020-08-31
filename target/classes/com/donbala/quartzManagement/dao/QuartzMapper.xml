@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.donbala.quartzManagement.dao.QuartzMapper">
+    <resultMap type="com.donbala.quartzManagement.model.Quartz" id="BaseResultMap">
+		<result column="key" property="key" jdbcType="VARCHAR"/>
+        <result column="jobCode" property="jobCode" jdbcType="VARCHAR"/>
+        <result column="jobClassName" property="jobClassName" jdbcType="VARCHAR"/>
+        <result column="jobName" property="jobName" jdbcType="VARCHAR"/>
+        <result column="jobPlanCode" property="jobPlanCode" jdbcType="VARCHAR"/>
+        <result column="jobPlanDesc" property="jobPlanDesc" jdbcType="VARCHAR"/>
+        <result column="repeatUnit" property="repeatUnit" jdbcType="VARCHAR"/>
+        <result column="repeatInterval" property="repeatInterval" jdbcType="VARCHAR"/>
+        <result column="useFlag" property="useFlag" jdbcType="VARCHAR"/>
+        <result column="startDate" property="startDate" jdbcType="VARCHAR"/>
+        <result column="endDate" property="endDate" jdbcType="VARCHAR"/>
+        <result column="triggerState" property="triggerState" jdbcType="VARCHAR"/>
+        <result column="paramCode" property="paramCode" jdbcType="VARCHAR"/>
+        <result column="paramValue" property="paramValue" jdbcType="VARCHAR"/>
+        <result column="paramName" property="paramName" jdbcType="VARCHAR"/>
+        <result column="valueAlias" property="valueAlias" jdbcType="VARCHAR"/>
+        <result column="runState" property="runState" jdbcType="VARCHAR"/>
+        <result column="cronExp" property="cronExp" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="page1">
+		<![CDATA[ select * from  (select test_.*,rownum rn_ from ( ]]>
+	</sql>
+    <sql id="page2">
+		<![CDATA[) test_ where rownum< = #{pageEnd}) where rn_ >  #{pageStart}]]>
+	</sql>
+	
+	<!-- 查询全部任务执行计划	-->
+    <select id="getAllJobPlan" resultMap="BaseResultMap" parameterType="com.donbala.quartzManagement.model.Quartz">
+		SELECT (SELECT D.jobname FROM CMS_JOBDEF D WHERE D.jobcode = T.jobcode) jobname,
+			   jobcode,
+			   jobplancode,
+			   jobplancode key,
+			   jobplandesc,
+			   repeatinterval,
+			   (SELECT codename
+					FROM CMS_CODEDEF M
+					WHERE M.code = T.repeatunit
+					AND M.codetype = 'jobPlan') repeatunit,
+			   (CASE
+				 WHEN useflag = '1' THEN
+				  '启用'
+				 WHEN useflag = '0' THEN
+				  '停止'
+				 ELSE
+				  ''
+			   END) useflag,
+			   (CASE
+				 WHEN T.useflag = '0' THEN
+				  '停止运行'
+				 ELSE
+				  (CASE
+				 WHEN T.triggerstate = '1' THEN
+				  '正在运行'
+				 ELSE
+				  '等待运行'
+			   END) END) runstate,
+			   (SELECT P.paramvalue
+				  FROM CMS_JOBPLANPARAM P
+				 WHERE 1 = 1
+				   AND P.paramcode = 'IP'
+				   AND P.jobplancode = T.jobplancode) paramvalue,
+			   TO_CHAR (T.startdate, 'yyyy-mm-dd hh24:mi:ss') startdate
+		  FROM CMS_JOBPLANDEF T
+		 ORDER BY T.makedate DESC
+	</select>
+	
+	<!-- 查询可用的任务执行计划 -->
+	<select id="getAvailableJobPlan" resultMap="BaseResultMap">
+		SELECT jobcode,
+			   jobplancode,
+			   (SELECT M.jobclassname FROM CMS_JOBDEF M WHERE M.jobcode = T.jobcode) jobclassname,
+			   DATE_FORMAT (startdate, '%Y-%m-%d %H:%i:%s') startdate,
+			   DATE_FORMAT (enddate, '%Y-%m-%d %H:%i:%s') enddate,
+			   repeatinterval,
+			   repeatunit
+		  FROM CMS_JOBPLANDEF T
+		 WHERE T.useflag = '0'
+	</select>
+
+	<!-- 查询作业参数 -->
+	<select id="selectJobParam" resultMap="BaseResultMap" parameterType="com.donbala.quartzManagement.model.Quartz">
+		SELECT jobcode, paramcode, paramname,
+		(SELECT jobclassname FROM CMS_JOBDEF D WHERE D.jobcode = T.jobcode) jobclassname
+		 FROM CMS_JOBPARAMDEF T WHERE T.jobcode = #{jobCode}
+	</select>
+
+	<!-- 新增作业计划 -->
+	<insert id="insertJobPlanDef"  parameterType="com.donbala.quartzManagement.model.Quartz">
+		INSERT INTO CMS_JOBPLANDEF  (JOBPLANCODE,JOBCODE,JOBPLANDESC,RUNTYPE,REPEATINTERVAL,REPEATUNIT,STARTDATE,ENDDATE,USEFLAG,TRIGGERSTATE,
+    		MAKEDATE,MAKEUSER,MODIFYDATE,MODIFYUSER,CRONEXP)
+      	VALUES(#{jobPlanCode},#{jobCode},#{jobPlanDesc},#{runType},#{repeatInterval},#{repeatUnit},TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss'),TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss'),#{useFlag},#{triggerState},
+      		TO_DATE(#{makeDate},'yyyy-mm-dd hh24:mi:ss'),#{makeUser},TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),#{modifyUser},#{cronExp})
+	</insert>
+	<!-- 记录作业计划参数 -->
+	<insert id="insertJobPlanParam" parameterType="com.donbala.quartzManagement.model.Quartz">
+		INSERT INTO CMS_JOBPLANPARAM (JOBCODE,JOBPLANCODE,PARAMCODE,PARAMVALUE,MAKEDATE,MAKEUSER,MODIFYDATE,MODIFYUSER)
+			values(#{jobCode},#{jobPlanCode},#{paramCode},#{paramValue},TO_DATE(#{makeDate},'yyyy-mm-dd hh24:mi:ss'),
+			#{makeUser},TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),#{modifyUser})
+	</insert>
+	<!--删除任务-->
+	<delete id="deleteJobPlanDef" parameterType="string" >
+		DELETE FROM CMS_JOBPLANDEF WHERE JOBPLANCODE = #{jobPlanCode}
+	</delete>
+	<!--删除任务参数-->
+	<delete id="deleteJobPlanParam" parameterType="string" >
+		DELETE FROM CMS_JOBPLANPARAM WHERE JOBPLANCODE = #{jobPlanCode}
+	</delete>
+	<!--修改作业状态为启动-->
+	<update id="startJobPlanDef" parameterType="string" >
+		UPDATE  CMS_JOBPLANDEF  SET USEFLAG = '1',TRIGGERSTATE='0' WHERE JOBPLANCODE = #{jobPlanCode}
+	</update>
+	<!--修改作业状态为停止-->
+	<update id="stopJobPlanDef" parameterType="string" >
+		UPDATE  CMS_JOBPLANDEF  SET USEFLAG = '0',TRIGGERSTATE='0' WHERE JOBPLANCODE = #{jobPlanCode}
+	</update>
+	<!--修改作业任务-->
+	<update id="updateJobPlan" parameterType="com.donbala.quartzManagement.model.Quartz" >
+		UPDATE CMS_JOBPLANDEF SET JOBCODE=#{jobCode},JOBPLANDESC=#{jobPlanDesc},REPEATINTERVAL=#{repeatInterval},
+		REPEATUNIT=#{repeatUnit},STARTDATE=TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss'),ENDDATE=TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss'),
+		USEFLAG=#{useFlag},TRIGGERSTATE=#{triggerState},
+		MODIFYDATE=TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),MODIFYUSER=#{modifyUser},CRONEXP=#{cronExp}
+		where JOBPLANCODE=#{jobPlanCode}
+	</update>
+	<!--删除作业参数-->
+	<delete id="deletePlanParam" parameterType="com.donbala.quartzManagement.model.Quartz" >
+		delete from CMS_JOBPLANPARAM where jobplancode= #{jobPlanCode}
+	</delete>
+	<!--查询作业内容，job类名-->
+	<select id="selectJobPlanClass" parameterType="string" resultMap = "BaseResultMap">
+		SELECT D.*,T.JOBCLASSNAME FROM CMS_JOBPLANDEF D,CMS_JOBDEF T
+			WHERE D.JOBCODE = T.JOBCODE  AND D.JOBPLANCODE = #{jobPlanCode}
+	</select>
+	<!--查询计划运行状态-->
+	<select id="selectJobPlanState"  parameterType="string" resultType="com.donbala.quartzManagement.model.Quartz">
+		SELECT D.jobplancode,
+			   (CASE
+				 WHEN D.useflag = '0' THEN
+				  '停止运行'
+				 ELSE
+				  (case D.triggerstate
+				 when '0' then
+				  '等待运行'
+				 when '1' then
+				  '正在运行'
+			   end) END) runstate
+		  FROM CMS_JOBPLANDEF D
+		 WHERE D.jobplancode = #{jobPlanCode}
+	</select>
+	<!--计划回显-->
+	<select id="selectReturnView" resultMap = "BaseResultMap" parameterType="com.donbala.quartzManagement.model.Quartz">
+		select E.jobcode,
+			   E.repeatinterval,
+			   E.repeatunit,
+			   TO_CHAR(E.startdate, 'yyyy-mm-dd hh24:mi:ss') startdate,
+			   TO_CHAR(E.enddate, 'yyyy-mm-dd hh24:mi:ss') enddate,
+			   E.jobplandesc,
+			   (select T.paramvalue
+				  from CMS_JOBPLANPARAM T
+				 where T.paramcode = 'paramStartDate'
+				   and E.jobplancode = T.jobplancode) paramStartDate,
+			   (select T.paramvalue
+				  from CMS_JOBPLANPARAM T
+				 where T.paramcode = 'paramEndDate'
+				   and E.jobplancode = T.jobplancode) paramEndDate,
+			   (SELECT C.CODENAME
+				  FROM CMS_CODEDEF C
+				 WHERE CODETYPE = 'jobPlan'
+				   and C.code = E.repeatunit) paramName,
+			   (SELECT C.CODEALIAS
+				  FROM CMS_CODEDEF C
+				 WHERE CODETYPE = 'jobPlan'
+				   AND C.code = E.repeatunit) valueAlias,
+			   (SELECT D.jobName from CMS_JOBDEF D where D.jobcode = E.jobcode) jobName
+		  FROM CMS_JOBPLANDEF E
+		 WHERE jobplancode = #{jobPlanCode}
+	</select>
+	<!--参数回显-->
+	<select id="selectParamByCode" resultMap = "BaseResultMap" parameterType="com.donbala.quartzManagement.model.Quartz">
+		 SELECT T.paramcode,
+			   T.paramvalue,
+			   C.paramname,
+			   (SELECT jobclassname FROM CMS_JOBDEF E WHERE E.jobcode = C.jobcode) jobclassname
+		 FROM CMS_JOBPLANPARAM T, CMS_JOBPARAMDEF C
+		 WHERE T.jobcode = C.jobcode
+		   AND T.paramcode = C.paramcode
+		   AND T.jobplancode = #{jobPlanCode}
+		 GROUP BY T.paramcode, T.paramvalue, C.paramname, C.jobcode
+	</select>
+</mapper>

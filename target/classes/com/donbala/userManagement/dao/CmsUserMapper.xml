@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donbala.userManagement.dao.CmsUserMapper">
+  <resultMap id="BaseResultMap" type="com.donbala.userManagement.model.CmsUser">
+    <id column="USERCODE" jdbcType="VARCHAR" property="usercode" />
+    <result column="EMAIL" jdbcType="VARCHAR" property="email" />
+    <result column="MOBILE" jdbcType="VARCHAR" property="mobile" />
+    <result column="PASSWORD" jdbcType="VARCHAR" property="password" />
+    <result column="NAME" jdbcType="VARCHAR" property="name" />
+    <result column="GENDOR" jdbcType="VARCHAR" property="gendor" />
+    <result column="BRANCH" jdbcType="VARCHAR" property="branch" />
+    <result column="DEPARTMENT" jdbcType="VARCHAR" property="department" />
+    <result column="STATE" jdbcType="VARCHAR" property="state" />
+    <result column="ADMINFLAG" jdbcType="VARCHAR" property="adminflag" />
+    <result column="PSWEXPIREDATE" jdbcType="VARCHAR" property="pswexpiredate" />
+    <result column="LASTLOGINDATE" jdbcType="VARCHAR" property="lastlogindate" />
+    <result column="MAKEDATE" jdbcType="VARCHAR" property="makedate" />
+    <result column="MAKEUSER" jdbcType="VARCHAR" property="makeuser" />
+    <result column="MODIFYDATE" jdbcType="VARCHAR" property="modifydate" />
+    <result column="MODIFYUSER" jdbcType="VARCHAR" property="modifyuser" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    USERCODE, EMAIL, MOBILE, PASSWORD, NAME, GENDOR, BRANCH, DEPARTMENT, STATE, ADMINFLAG, 
+    to_char(PSWEXPIREDATE,'yyyy-mm-dd hh24:mi:ss') PSWEXPIREDATE, to_char(LASTLOGINDATE,'yyyy-mm-dd hh24:mi:ss') LASTLOGINDATE,
+    to_char(MAKEDATE,'yyyy-mm-dd hh24:mi:ss') MAKEDATE, MAKEUSER, to_char(MODIFYDATE,'yyyy-mm-dd hh24:mi:ss') MODIFYDATE, MODIFYUSER
+  </sql>
+
+  <!--查询用户列表-->
+  <select id="selectUsers" parameterType="com.donbala.userManagement.model.CmsUser"  resultMap="BaseResultMap">
+    select
+      USERCODE, EMAIL, MOBILE, PASSWORD, NAME, decode(GENDOR,'0','男','1','女') GENDOR, BRANCH,
+      (select wm_concat(rolename) from cms_role where roleid in (select roleid from cms_userrole ur where ur.usercode=u.usercode)) DEPARTMENT,
+      STATE, ADMINFLAG,
+      to_char(PSWEXPIREDATE,'yyyy-mm-dd hh24:mi:ss') PSWEXPIREDATE, to_char(LASTLOGINDATE,'yyyy-mm-dd hh24:mi:ss') LASTLOGINDATE,
+      to_char(MAKEDATE,'yyyy-mm-dd hh24:mi:ss') MAKEDATE, MAKEUSER, to_char(MODIFYDATE,'yyyy-mm-dd hh24:mi:ss') MODIFYDATE, MODIFYUSER
+    from cms_user u
+    where 1=1
+    <if test="usercode != null and usercode != ''">
+    and USERCODE = #{usercode}
+    </if>
+    <if test="gendor != null and gendor != ''">
+      and GENDOR = #{gendor}
+    </if>
+    <if test="mobile != null and mobile != ''">
+      and MOBILE=#{mobile}
+    </if>
+    <if test="email != null and email != ''">
+      and EMAIL=#{email}
+    </if>
+
+  </select>
+  <!--通过用户号查询用户-->
+  <select id="selectUserByCode" parameterType="string" resultType="com.donbala.userManagement.model.CmsUser">
+      select usercode from cms_user where usercode=#{usercode}
+  </select>
+  <!--插入用户表-->
+  <insert id="insertUser" parameterType="com.donbala.userManagement.model.CmsUser">
+      insert into cms_user(usercode,email,mobile,password,name,gendor,makedate,makeuser,modifydate,modifyuser)
+      values(#{usercode},#{email},#{mobile},#{password},#{name},#{gendor},sysdate,#{makeuser},sysdate,#{modifyuser})
+  </insert>
+  <!--插入用户角色表-->
+  <insert id="inserUserRoles" parameterType="com.donbala.userManagement.model.CmsUser">
+      insert into cms_userrole(usercode,roleid,makedate,makeuser,modifydate,modifyuser)
+      select #{usercode},t.*,sysdate,#{makeuser},sysdate,#{modifyuser} from (
+          <foreach collection="cmsUserroles" separator="union all" item="item" index="index">
+              select #{item} from dual
+          </foreach>
+      ) t
+  </insert>
+  <!--删除用户-->
+  <delete id="delteUser" parameterType="string">
+      delete cms_user where usercode = #{usercode}
+  </delete>
+  <!--删除用户的角色-->
+  <delete id="deleteUserRoles" parameterType="string">
+      delete cms_userrole where usercode = #{usercode}
+  </delete>
+  <!--回显查询用户信息-->
+  <select id="selectUserReturnInfo" parameterType="string" resultType="com.donbala.userManagement.model.CmsUser">
+      select u.usercode,
+             u.name,
+             u.gendor,
+             wm_concat(r.roleid) department,
+             u.email,
+             u.mobile
+        from cms_user u, cms_userrole r
+       where u.usercode = r.usercode
+         and u.usercode = #{usercode}
+       group by u.usercode, u.name, u.gendor, u.email, u.mobile
+  </select>
+  <!--修改用户信息-->
+  <update id="updateUser" parameterType="com.donbala.userManagement.model.CmsUser">
+      update cms_user set name=#{name},gendor=#{gendor},email=#{email},mobile=#{mobile},modifydate=sysdate,modifyuser=#{modifyuser}
+      where usercode=#{usercode}
+  </update>
+
+</mapper>

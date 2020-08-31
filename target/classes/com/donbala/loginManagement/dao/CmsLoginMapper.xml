@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.donbala.loginManagement.dao.CmsLoginMapper">
+  <resultMap id="LogintraceMap" type="com.donbala.loginManagement.model.CmsLogintrace">
+    <id column="ID" jdbcType="VARCHAR" property="id" />
+    <result column="USERCODE" jdbcType="VARCHAR" property="usercode" />
+    <result column="OPERATETYPE" jdbcType="VARCHAR" property="operatetype" />
+    <result column="OPERATEDATE" jdbcType="VARCHAR" property="operatedate" />
+    <result column="MAKEDATE" jdbcType="VARCHAR" property="makedate" />
+    <result column="MAKEUSER" jdbcType="VARCHAR" property="makeuser" />
+    <result column="MODIFYDATE" jdbcType="VARCHAR" property="modifydate" />
+    <result column="MODIFYUSER" jdbcType="VARCHAR" property="modifyuser" />
+  </resultMap>
+  <resultMap id="MenuMap" type="com.donbala.loginManagement.model.CmsMenu">
+    <id column="MENUID" jdbcType="VARCHAR" property="menuid" />
+    <result column="MENUNAME" jdbcType="VARCHAR" property="menuname" />
+    <result column="MENUCODE" jdbcType="VARCHAR" property="menucode" />
+    <result column="PARENTMENUID" jdbcType="VARCHAR" property="parentmenuid" />
+    <result column="MENULINK" jdbcType="VARCHAR" property="menulink" />
+    <result column="STATUS" jdbcType="VARCHAR" property="status" />
+    <result column="NODEORDER" jdbcType="INTEGER" property="nodeorder" />
+    <result column="MAKEDATE" jdbcType="TIMESTAMP" property="makedate" />
+    <result column="MAKEUSER" jdbcType="VARCHAR" property="makeuser" />
+    <result column="MODIFYDATE" jdbcType="TIMESTAMP" property="modifydate" />
+    <result column="MODIFYUSER" jdbcType="VARCHAR" property="modifyuser" />
+  </resultMap>
+  <sql id="Base_logintrace_List">
+    ID, USERCODE, OPERATETYPE, OPERATEDATE, MAKEDATE, MAKEUSER, MODIFYDATE, MODIFYUSER
+  </sql>
+  <sql id="Base_User_List">
+    USERCODE, EMAIL, MOBILE, PASSWORD, NAME, GENDOR, BRANCH, DEPARTMENT, STATE, ADMINFLAG,
+    to_char(PSWEXPIREDATE,'yyyy-mm-dd hh24:mi:ss') PSWEXPIREDATE, to_char(LASTLOGINDATE,'yyyy-mm-dd hh24:mi:ss') LASTLOGINDATE,
+    to_char(MAKEDATE,'yyyy-mm-dd hh24:mi:ss') MAKEDATE, MAKEUSER, to_char(MODIFYDATE,'yyyy-mm-dd hh24:mi:ss') MODIFYDATE, MODIFYUSER
+  </sql>
+
+  <insert id="insert" parameterType="com.donbala.loginManagement.model.CmsLogintrace">
+    insert into cms_logintrace (ID, USERCODE, OPERATETYPE, 
+      OPERATEDATE, MAKEDATE, MAKEUSER, 
+      MODIFYDATE, MODIFYUSER)
+    values (#{id,jdbcType=VARCHAR}, #{usercode,jdbcType=VARCHAR}, #{operatetype,jdbcType=VARCHAR}, 
+      sysdate, sysdate, #{makeuser,jdbcType=VARCHAR},
+      sysdate, #{modifyuser,jdbcType=VARCHAR})
+  </insert>
+
+  <select id="selectByUsercodeAndPsw" parameterType="java.lang.String" resultType="com.donbala.userManagement.model.CmsUser">
+    select
+        USERCODE, EMAIL, MOBILE, PASSWORD, NAME, GENDOR, BRANCH, DEPARTMENT, STATE, ADMINFLAG,
+        to_char(PSWEXPIREDATE,'yyyy-mm-dd hh24:mi:ss') PSWEXPIREDATE, to_char(LASTLOGINDATE,'yyyy-mm-dd hh24:mi:ss') LASTLOGINDATE,
+        to_char(MAKEDATE,'yyyy-mm-dd hh24:mi:ss') MAKEDATE, MAKEUSER, to_char(MODIFYDATE,'yyyy-mm-dd hh24:mi:ss') MODIFYDATE, MODIFYUSER
+    from cms_user
+    where (USERCODE = #{usercode}) and password = #{password}
+  </select>
+  <!--antd的菜单查询-->
+  <select id="selectMenuByUsercode" parameterType="java.lang.String" resultMap="MenuMap">
+    select MENUID,
+           MENUCODE,
+           MENUNAME,
+           PARENTMENUID,
+           MENULINK,
+           STATUS,
+           NODEORDER,
+           MAKEDATE,
+           MAKEUSER,
+           MODIFYDATE,
+           MODIFYUSER
+      from ANTD_MENU
+     where MENUID in
+           (SELECT MENUID
+              from cms_rolemenu rm
+             where rm.roleid in
+                   (select roleid from cms_userrole ur where ur.usercode = #{usercode}))
+     order by nodeorder
+
+  </select>
+
+
+</mapper>
