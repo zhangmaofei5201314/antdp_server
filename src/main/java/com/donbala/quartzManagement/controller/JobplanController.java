@@ -122,7 +122,7 @@ public class JobplanController {
      */
     @RequestMapping(value = "/controller/quartz/management/editJob", method = RequestMethod.POST)
     public Map<String, Object> editJobPlan(Quartz quartz){
-        String userName = cmsUserServiceIntf.getUserByToken(quartz.getToken()).getName();
+        String userName = cmsUserServiceIntf.getUserByToken(quartz.getToken()).getUsercode();
         quartz.setMakeUser(userName);
         quartz.setModifyUser(userName);
         return quartzServiceIntf.updateJobPlanAndParam(quartz);
