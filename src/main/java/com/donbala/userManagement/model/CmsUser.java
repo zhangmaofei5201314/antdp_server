@@ -3,6 +3,8 @@ package com.donbala.userManagement.model;
 import com.donbala.Commons.model.BaseResult;
 
 public class CmsUser extends BaseResult {
+    private String key;
+
     private String usercode;
 
     private String email;
@@ -38,6 +40,14 @@ public class CmsUser extends BaseResult {
     private String[] cmsUserroles;
 
     private String operatetype;
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
 
     public String[] getCmsUserroles() {
         return cmsUserroles;

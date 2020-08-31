@@ -2,6 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.donbala.userManagement.dao.CmsUserMapper">
   <resultMap id="BaseResultMap" type="com.donbala.userManagement.model.CmsUser">
+    <id column="KEY" jdbcType="VARCHAR" property="key" />
     <id column="USERCODE" jdbcType="VARCHAR" property="usercode" />
     <result column="EMAIL" jdbcType="VARCHAR" property="email" />
     <result column="MOBILE" jdbcType="VARCHAR" property="mobile" />
@@ -28,7 +29,7 @@
   <!--查询用户列表-->
   <select id="selectUsers" parameterType="com.donbala.userManagement.model.CmsUser"  resultMap="BaseResultMap">
     select
-      USERCODE, EMAIL, MOBILE, PASSWORD, NAME, decode(GENDOR,'0','男','1','女') GENDOR, BRANCH,
+      USERCODE KEY, USERCODE, EMAIL, MOBILE, PASSWORD, NAME, decode(GENDOR,'0','男','1','女') GENDOR, BRANCH,
       (select wm_concat(rolename) from cms_role where roleid in (select roleid from cms_userrole ur where ur.usercode=u.usercode)) DEPARTMENT,
       STATE, ADMINFLAG,
       to_char(PSWEXPIREDATE,'yyyy-mm-dd hh24:mi:ss') PSWEXPIREDATE, to_char(LASTLOGINDATE,'yyyy-mm-dd hh24:mi:ss') LASTLOGINDATE,
