@@ -36,10 +36,7 @@
 			   jobplancode key,
 			   jobplandesc,
 			   repeatinterval,
-			   (SELECT codename
-					FROM CMS_CODEDEF M
-					WHERE M.code = T.repeatunit
-					AND M.codetype = 'jobPlan') repeatunit,
+			   repeatunit,
 			   (CASE
 				 WHEN useflag = '1' THEN
 				  '启用'
