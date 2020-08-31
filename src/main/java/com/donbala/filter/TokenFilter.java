@@ -5,7 +5,12 @@ import com.donbala.userManagement.model.CmsUser;
 import com.donbala.util.CacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -37,6 +42,10 @@ public class TokenFilter implements Filter {
 //    @ResponseBody
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest)servletRequest;
+        //预请求，放过
+        if("OPTIONS".equals(httpServletRequest.getMethod())){
+            filterChain.doFilter(servletRequest, servletResponse);
+        }
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
         httpServletResponse.setCharacterEncoding("UTF-8");
         httpServletResponse.setContentType("application/json; charset=utf-8");
@@ -45,6 +54,14 @@ public class TokenFilter implements Filter {
         Date currentDate = new Date();
         //根据传过来的token验证
         String token = httpServletRequest.getParameter("token"); //HttpServletRequest
+
+
+
+        if(token ==null){
+            JSONObject getTokenJson = GetRequestJsonUtils.getRequestJsonObject(httpServletRequest);
+            token = getTokenJson.getString("token");
+
+        }
 
         PrintWriter out = null ;
         JSONObject res = new JSONObject();
@@ -109,5 +126,25 @@ public class TokenFilter implements Filter {
     @Override
     public void destroy() {
 
+    }
+
+
+    public static byte[] getRequestPostBytes(HttpServletRequest request)
+            throws IOException {
+        int contentLength = request.getContentLength();
+        if(contentLength<0){
+            return null;
+        }
+        byte buffer[] = new byte[contentLength];
+        for (int i = 0; i < contentLength;) {
+
+            int readlen = request.getInputStream().read(buffer, i,
+                    contentLength - i);
+            if (readlen == -1) {
+                break;
+            }
+            i += readlen;
+        }
+        return buffer;
     }
 }
