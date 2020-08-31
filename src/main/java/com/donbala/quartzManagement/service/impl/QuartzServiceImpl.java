@@ -1,11 +1,13 @@
 package com.donbala.quartzManagement.service.impl;
 
 import ch.qos.logback.classic.Logger;
+import com.alibaba.fastjson.JSONObject;
 import com.donbala.quartzManagement.MyTriggerListener;
 import com.donbala.quartzManagement.dao.QuartzMapper;
 import com.donbala.quartzManagement.model.Quartz;
 import com.donbala.quartzManagement.service.QuartzServiceIntf;
 import com.donbala.quartzManagement.util.QuartzUtils;
+import com.donbala.util.DateUtil;
 import org.quartz.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,15 +72,15 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Map<String, Object> insertJobAndParam(Quartz quartz) {
         // ParamValue参数非空判断
-        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue()) || quartz.getParamValue().length() == 0){
             return basicMapBuilder("warning", "参数为空", "502");
         }
-        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
-        String[] paramValues = quartz.getParamValue().split(",");
-        // paramvalue中有多个参数，默认第一个参数为IP
-//        String localIP = DateUtil.getLocalHostIP();
-//        if (!localIP.equals(paramValues[0])){
-//            return basicMapBuilder("ipError", "IP异常", "502");
+        // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
+        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        // // paramvalue中根据key获取IP，并校验
+        String localIP = DateUtil.getLocalHostIP();
+//        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
+//            return basicMapBuilder("ipError", "IP异常", "503");
 //        }
         // 获取当前日期字符串
         String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
@@ -99,13 +101,12 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
         quartz.setCronExp(QuartzUtils.cron(quartz));
         quartz.setRunType("0");         // 设置任务类型，0-cron任务
         quartzMapper.insertJobPlanDef(quartz);
-        List<Quartz> paramList = quartzMapper.selectJobParam(quartz);
-        for (String paramValue : paramValues) {
-            String[] valueInfo = paramValue.split(":");
-            for (Quartz param: paramList) {
-                if (param.getParamCode().equals(valueInfo[0])){
-                    quartz.setParamCode(param.getParamCode());
-                    quartz.setParamValue(valueInfo[1]);
+        List<Quartz> dataList = quartzMapper.selectJobParam(quartz);
+        for (String paramKey : paramValues.keySet()) {
+            for (Quartz qtData: dataList) {
+                if (qtData.getParamCode().equals(paramKey)){
+                    quartz.setParamCode(qtData.getParamCode());
+                    quartz.setParamValue((String) paramValues.get(paramKey));
                     quartzMapper.insertJobPlanParam(quartz);
                     System.out.println(quartz.getParamCode() + "," + quartz.getParamValue());
                 }
@@ -125,15 +126,15 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     @Transactional(isolation= Isolation.READ_COMMITTED,propagation= Propagation.REQUIRED)
     public Map<String, Object> removeJob(Quartz quartz) {
         // ParamValue参数非空判断
-        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue()) || quartz.getParamValue().length() == 0){
             return basicMapBuilder("warning", "参数为空", "502");
         }
-        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
-        String[] paramValues = quartz.getParamValue().split(",");
-        // paramvalue中有多个参数，默认第一个参数为IP
-//        String localIP = DateUtil.getLocalHostIP();
-//        if (!localIP.equals(paramValues[0])){
-//            return basicMapBuilder("ipError", "IP异常", "502");
+        // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
+        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        // // paramvalue中根据key获取IP，并校验
+        String localIP = DateUtil.getLocalHostIP();
+//        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
+//            return basicMapBuilder("ipError", "IP异常", "503");
 //        }
         try {
             // 提取出jobPlanCode，放入map，并根据jobPlanCode删除任务和任务参数
@@ -163,15 +164,15 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Map<String, Object> startJob(Quartz quartz) {
         // ParamValue参数非空判断
-        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue()) || quartz.getParamValue().length() == 0){
             return basicMapBuilder("warning", "参数为空", "502");
         }
-        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
-        String[] paramValues = quartz.getParamValue().split(",");
-        // paramvalue中有多个参数，默认第一个参数为IP
-//        String localIP = DateUtil.getLocalHostIP();
-//        if (!localIP.equals(paramValues[0])){
-//            retburn basicMapBuilder("ipError", "IP异常", "502");
+        // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
+        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        // // paramvalue中根据key获取IP，并校验
+        String localIP = DateUtil.getLocalHostIP();
+//        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
+//            return basicMapBuilder("ipError", "IP异常", "503");
 //        }
         // 提取jobPlanCode,获取作业数据
         String jobPlanCode = quartz.getJobPlanCode();
@@ -201,15 +202,15 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     @Transactional(isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Map<String, Object> stopJob(Quartz quartz) {
         // ParamValue参数非空判断
-        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue()) || quartz.getParamValue().length() == 0){
             return basicMapBuilder("warning", "参数为空", "502");
         }
-        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
-        String[] paramValues = quartz.getParamValue().split(",");
-        // paramvalue中有多个参数，默认第一个参数为IP
-//        String localIP = DateUtil.getLocalHostIP();
-//        if (!localIP.equals(paramValues[0])){
-//            retburn basicMapBuilder("ipError", "IP异常", "502");
+        // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
+        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        // paramvalue中根据key获取IP，并校验
+        String localIP = DateUtil.getLocalHostIP();
+//        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
+//            return basicMapBuilder("ipError", "IP异常", "503");
 //        }
         // 获取jobPlanCode，创建调度容器，根据jonPlanCode生成触发器key
         String jobPlanCode = quartz.getJobPlanCode();
@@ -255,15 +256,15 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     @Override
     public Map<String, Object> updateJobPlanAndParam(Quartz quartz) {
         // ParamValue参数非空判断
-        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue())){
+        if (quartz.getParamValue() == null || "".equals(quartz.getParamValue()) || quartz.getParamValue().length() == 0){
             return basicMapBuilder("warning", "参数为空", "502");
         }
-        // 前端参数ParamValue： IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19
-        String[] paramValues = quartz.getParamValue().split(",");
-        // paramvalue中有多个参数，默认第一个参数为IP
-//        String localIP = DateUtil.getLocalHostIP();
-//        if (!localIP.equals(paramValues[0])){
-//            return basicMapBuilder("ipError", "IP异常", "502");
+        // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
+        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        // // paramvalue中根据key获取IP，并校验
+        String localIP = DateUtil.getLocalHostIP();
+//        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
+//            return basicMapBuilder("ipError", "IP异常", "503");
 //        }
         // 任务结束日期校验
         if (quartz.getEndDate() == null || "".equals(quartz.getEndDate())){ // 如果任务结束日期为空，则赋值为无穷
@@ -278,13 +279,12 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
         quartz.setCronExp(QuartzUtils.cron(quartz));
         quartzMapper.updateJobPlan(quartz);
         quartzMapper.deletePlanParam(quartz);
-        List<Quartz> paramList = quartzMapper.selectJobParam(quartz);
-        for (String paramValue : paramValues) {
-            String[] valueInfo = paramValue.split(":");
-            for (Quartz param: paramList) {
-                if (param.getParamCode().equals(valueInfo[0])){
-                    quartz.setParamCode(param.getParamCode());
-                    quartz.setParamValue(valueInfo[1]);
+        List<Quartz> dataList = quartzMapper.selectJobParam(quartz);
+        for (String paramKey : paramValues.keySet()) {
+            for (Quartz qtData: dataList) {
+                if (qtData.getParamCode().equals(paramKey)){
+                    quartz.setParamCode(qtData.getParamCode());
+                    quartz.setParamValue((String) paramValues.get(paramKey));
                     quartzMapper.insertJobPlanParam(quartz);
                     System.out.println(quartz.getParamCode() + "," + quartz.getParamValue());
                 }
