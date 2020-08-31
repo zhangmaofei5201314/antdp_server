@@ -24,5 +24,5 @@ public interface QuartzServiceIntf {
     // 修改一个任务
     Map<String, Object> updateJobPlanAndParam(Quartz quartz);
     // 获取所有定时任务，添加到调度器中
-    //void initJobsOnstart();
+    void initJobsOnstart();
 }

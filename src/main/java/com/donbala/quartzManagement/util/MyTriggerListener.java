@@ -1,4 +1,4 @@
-package com.donbala.quartzManagement;
+package com.donbala.quartzManagement.util;
 
 import ch.qos.logback.classic.Logger;
 import com.donbala.quartzManagement.service.impl.QuartzServiceImpl;

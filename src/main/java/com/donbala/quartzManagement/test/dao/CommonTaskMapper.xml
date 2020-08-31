@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.donbala.quartzManagement.test.dao.CommonTaskDao">
+
+    <resultMap type="com.donbala.quartzManagement.test.model.CommonTaskModel" id="BaseResultMap">
+        <result column="paramcode" property="paramCode" jdbcType="VARCHAR"/>
+        <result column="paramvalue" property="paramValue" jdbcType="VARCHAR"/>
+    </resultMap>
+    <!--查询作业的参数-->
+    <select id="selectJobPlanParam" resultMap="BaseResultMap" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+    	select p.paramcode, p.paramvalue
+		  from CMS_jobplanparam p
+		 where 1 = 1
+		   and p.jobcode = #{jobCode}
+		   and p.jobplancode = #{jobPlanCode}
+	</select>
+
+    <insert id="insertJobRunLog"  parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+        <selectKey keyProperty="serialno" resultType="String" order="BEFORE">
+            <![CDATA[
+		  select lpad(jobrunlog_serialno.nextval,20,'0') from dual
+		  ]]>
+        </selectKey>
+        insert into CMS_jobrunlog
+        (serialno,
+        jobcode,
+        jobplancode,
+        startdate,
+        runstate,
+        makedate,
+        makeuser,
+        modifydate,
+        modifyuser)
+        values
+        (#{serialno},
+        #{jobCode},
+        #{jobPlanCode},
+        TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss'),
+        #{runState},
+        TO_DATE(#{makeDate},'yyyy-mm-dd hh24:mi:ss'),
+        'system',
+        TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),
+        'system')
+    </insert>
+
+    <update id="updateJobRunLogBySerialno" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+		update CMS_jobrunlog a
+		   set a.enddate    = TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss'),
+		       a.runstate   = #{runState},
+		       a.runresult  = #{runResult},
+		       a.modifydate = TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),
+		       a.modifyuser = 'system'
+		 where a.serialno = #{serialno}
+	</update>
+
+
+    <select id="selectLastSuccessDate" resultType="String" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+	    select DATE_FORMAT(max(a.startdate),'yyyy-mm-dd hh24:mi:ss') successdate
+		  from CMS_jobrunlog a
+		 where 1 = 1
+		   and a.runresult = '成功'
+		   and a.runstate = '1'
+		   and a.jobcode = #{jobCode}
+	</select>
+    <!--查询上次执行成功的时间-->
+    <select id="selectLastSuccessDateByJobPlan" resultType="String" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+		 select v.lastSuccessDate
+  			from (SELECT to_char(a.STARTDATE, 'yyyy-mm-dd hh24:mi:ss') lastSuccessDate
+					  FROM CMS_jobrunlog a
+					 WHERE a.JOBCODE = #{jobCode}
+					   AND a.JOBPLANCODE = #{jobPlanCode}
+					   AND a.RUNSTATE = '1'
+					   AND a.RUNRESULT = '成功'
+					 ORDER BY a.SERIALNO DESC) v
+ 			where rownum = 1
+	</select>
+
+    <!--查询手工执行全量归并池上次成功时间 -->
+    <select id="selectHandAllMergePoolLastSuccessDate" resultType="String">
+		SELECT DATE_FORMAT(max(a.STARTDATE), 'yyyy-mm-dd hh24:mi:ss') successdate
+		  FROM CMS_handjobrunlog a
+		 WHERE 1 = 1
+		   and a.RUNSTATE = '1'
+		   and a.RUNRESULT = '成功'
+		   and a.DEALTYPE = '05'
+		   AND a.DEALCONTENT = 'allCustomerMergePool'
+	</select>
+
+    <!--查询手工执行全量CRM刷新池上次成功时间 -->
+    <select id="selectHandAllRefreshPoolLastSuccessDate" resultType="String">
+		SELECT DATE_FORMAT(max(a.STARTDATE), 'yyyy-mm-dd hh24:mi:ss') successdate
+		  FROM CMS_handjobrunlog a
+		 WHERE 1 = 1
+		   and a.RUNSTATE = '1'
+		   and a.RUNRESULT = '成功'
+		   and a.DEALTYPE = '05'
+		   AND a.DEALCONTENT = 'allCustomerRefreshPool'
+	</select>
+    <!--查询运行日志-->
+    <select id="selectJobRunLog"  resultType="com.donbala.quartzManagement.test.model.CommonTaskModel" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+        select t.jobName,t.startDate,t.endDate,t.runState,t.runResult,t.makeDate,t.makeUser,t.modifyDate,t.modifyUser
+        from (select v.*, rownum as rn
+        from (
+        SELECT A.JOBNAME,
+        to_char(B.STARTDATE,'yyyy-mm-dd hh24:mi:ss') STARTDATE,
+        to_char(B.ENDDATE,'yyyy-mm-dd hh24:mi:ss') ENDDATE,
+        (case when B.RUNSTATE='0' then '执行中' when B.RUNSTATE='1' then '已完成' else '' end) RUNSTATE,
+        B.RUNRESULT,
+        to_char(B.MAKEDATE,'yyyy-mm-dd hh24:mi:ss') MAKEDATE,
+        B.MAKEUSER,
+        to_char(B.MODIFYDATE,'yyyy-mm-dd hh24:mi:ss') MODIFYDATE,
+        B.MODIFYUSER
+        FROM CMS_JOBDEF A, CMS_JOBRUNLOG B
+        WHERE A.JOBCODE = B.JOBCODE
+        <if test='jobCode != "" and jobCode != null'>
+            <![CDATA[AND B.JOBCODE = #{jobCode}]]>
+        </if>
+        <if test="jobName != '' and jobName != null">
+            <![CDATA[AND B.JOBCODE=(SELECT JOBCODE FROM CMS_JOBDEF WHERE JOBNAME=#{jobName})]]>
+        </if>
+        <if test='startDate != "" and startDate != null'>
+            <![CDATA[AND TO_DATE(to_char(B.STARTDATE,'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd hh24:mi:ss') >= TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss')]]>
+        </if>
+        <if test='endDate != "" and endDate != null'>
+            <![CDATA[AND TO_DATE(to_char(B.ENDDATE,'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd hh24:mi:ss') <= TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss')]]>
+        </if>
+        <if test='runState != "" and runState != null'>
+            <![CDATA[AND B.RUNSTATE = #{runState}]]>
+        </if>
+        ORDER BY B.SERIALNO DESC
+        ) v
+        where rownum<![CDATA[ <= ]]>#{pageEnd}) t
+        where t.rn<![CDATA[ > ]]>#{pageStart}
+    </select>
+    <!--查询日志分页-->
+    <select id="selectJobRunLogCount"  resultType="int" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+        SELECT count(B.SERIALNO)
+        FROM CMS_JOBDEF A, CMS_JOBRUNLOG B
+        WHERE A.JOBCODE = B.JOBCODE
+        <if test='jobCode != "" and jobCode != null'>
+            <![CDATA[AND B.JOBCODE = #{jobCode}]]>
+        </if>
+        <if test="jobName != '' and jobName != null">
+            <![CDATA[AND B.JOBCODE=(SELECT JOBCODE FROM CMS_JOBDEF WHERE JOBNAME=#{jobName})]]>
+        </if>
+        <if test='startDate != "" and startDate != null'>
+            <![CDATA[AND TO_DATE(to_char(B.STARTDATE,'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd hh24:mi:ss') >= TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss')]]>
+        </if>
+        <if test='endDate != "" and endDate != null'>
+            <![CDATA[AND TO_DATE(to_char(B.ENDDATE,'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd hh24:mi:ss') <= TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss')]]>
+        </if>
+        <if test='runState != "" and runState != null'>
+            <![CDATA[AND B.RUNSTATE = #{runState}]]>
+        </if>
+    </select>
+
+    <select id="selectJobName" resultMap="BaseResultMap">
+		SELECT DISTINCT JOBNAME,JOBCODE FROM CMS_JOBDEF ORDER BY JOBCODE
+	</select>
+
+    <select id="selectJobNameByJobCode" resultType="java.lang.String">
+        select JOBNAME from CMS_jobdef a where a.JOBCODE = '${jobCode}'
+	</select>
+</mapper>

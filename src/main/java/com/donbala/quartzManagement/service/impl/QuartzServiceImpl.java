@@ -2,7 +2,7 @@ package com.donbala.quartzManagement.service.impl;
 
 import ch.qos.logback.classic.Logger;
 import com.alibaba.fastjson.JSONObject;
-import com.donbala.quartzManagement.MyTriggerListener;
+import com.donbala.quartzManagement.util.MyTriggerListener;
 import com.donbala.quartzManagement.dao.QuartzMapper;
 import com.donbala.quartzManagement.model.Quartz;
 import com.donbala.quartzManagement.service.QuartzServiceIntf;
@@ -346,23 +346,23 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
      * @Date:   2020/8/25 9:56
      * @description: 获取所有的定时任务，添加至调度器中
      */
-//    @Override
-//    public void initJobsOnstart() {
-//        log.info("开始初始化所有批处理任务");
-//        List<Quartz> quartzList = quartzMapper.getAvailableJobPlan();
-//        if (quartzList.size() > 0){
-//            //遍历任务列表
-//            for (Quartz quartz : quartzList) {
-//                // 将任务添加至调度器中
-//                try {
-//                    addQuartz(quartz);
-//                } catch (Exception e){
-//                    e.printStackTrace();
-//                }
-//            }
-//            log.info("任务调度初始化完成");
-//        }
-//    }
+    @Override
+    public void initJobsOnstart() {
+        log.info("开始初始化所有批处理任务");
+        List<Quartz> quartzList = quartzMapper.getAvailableJobPlan();
+        if (quartzList.size() > 0){
+            //遍历任务列表
+            for (Quartz quartz : quartzList) {
+                // 将任务添加至调度器中
+                try {
+                    addQuartz(quartz);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            log.info("任务调度初始化完成");
+        }
+    }
 
     /**
      * @Author: RedRush
@@ -496,11 +496,11 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     /**
      * @Author: RedRush
      * @Date:   2020/8/27 11:15
-     * @description: 错误信息生成
+     * @description: 返回信息生成
      * @param:
      *      status      任务状态
-     *      msg         返回错误信息
-     *      code        错误码
+     *      msg         返回信息
+     *      code        状态码
      * @return: Map<String, Object>
      */
     public Map<String, Object> basicMapBuilder(String status, String msg, String code){
