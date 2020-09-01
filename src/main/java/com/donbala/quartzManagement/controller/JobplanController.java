@@ -111,7 +111,7 @@ public class JobplanController {
      * @description: 计划回显
      */
     @RequestMapping(value = "/controller/quartz/management/returnJobView", method = RequestMethod.POST)
-    public Map<String, Object> selectReturnView(@RequestBody Quartz quartz){
+    public Map<String, Object> selectReturnView(Quartz quartz){
         return quartzServiceIntf.selectReturnView(quartz);
     }
 

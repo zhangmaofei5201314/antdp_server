@@ -130,7 +130,8 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
             return basicMapBuilder("warning", "参数为空", "502");
         }
         // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
-        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+//        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        String IP = quartz.getParamValue();
         // // paramvalue中根据key获取IP，并校验
         String localIP = DateUtil.getLocalHostIP();
 //        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
@@ -168,7 +169,8 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
             return basicMapBuilder("warning", "参数为空", "502");
         }
         // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
-        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+//        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        String IP = quartz.getParamValue();
         // // paramvalue中根据key获取IP，并校验
         String localIP = DateUtil.getLocalHostIP();
 //        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
@@ -206,7 +208,8 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
             return basicMapBuilder("warning", "参数为空", "502");
         }
         // 前端参数ParamValue： {IP:10.1.18.56,endDate:2019-10-23 15:10:20,startDate:2019-10-23 15:10:19}
-        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+//        Map<String, Object> paramValues = JSONObject.parseObject(quartz.getParamValue());
+        String IP = quartz.getParamValue();
         // paramvalue中根据key获取IP，并校验
         String localIP = DateUtil.getLocalHostIP();
 //        if (!(paramValues.containsKey("IP") && localIP.equals(paramValues.get("IP")))){
@@ -243,7 +246,7 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
     @Override
     public Map<String, Object> selectReturnView(Quartz quartz) {
         Map<String,Object> map=new HashMap<String,Object>();
-        map.put("returnView", quartzMapper.selectReturnView(quartz));
+//        map.put("returnView", quartzMapper.selectReturnView(quartz));
         map.put("paramByCode", quartzMapper.selectParamByCode(quartz));
         return map;
     }
@@ -272,6 +275,7 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
         }
         // 初始化修改日期
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        quartz.setMakeDate(date);     // 设置更改日期
         quartz.setModifyDate(date);     // 设置更改日期
         quartz.setUseFlag("0");         // 作业计划-停止状态
         quartz.setTriggerState("1");    // 运行状态-等待运行
