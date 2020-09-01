@@ -1,8 +1,8 @@
 package com.donbala.quartzManagement.test.jobs;
 
 import ch.qos.logback.classic.Logger;
-import com.donbala.quartzManagement.test.dao.CommonTaskDao;
-import com.donbala.quartzManagement.test.model.CommonTaskModel;
+import com.donbala.quartzManagement.dao.CommonTaskDao;
+import com.donbala.quartzManagement.model.CommonTaskModel;
 import com.donbala.quartzManagement.test.service.DemoTaskService;
 import com.donbala.util.DateUtil;
 import org.quartz.DisallowConcurrentExecution;
@@ -26,13 +26,14 @@ public class JobTestLog implements Job {
 
     public final static Logger log = (Logger) LoggerFactory.getLogger(JobTestLog.class);
     @Autowired
-    CommonTaskDao commonTaskDao;
+    private CommonTaskDao commonTaskDao;
     @Autowired
-    DemoTaskService demoTaskService;
+    private DemoTaskService demoTaskService;
 
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        System.out.println("****JobTestLog");
         String jobCode = context.getJobDetail().getKey().getName();
         String jobPlanCode = context.getJobDetail().getKey().getGroup();
         log.info("作业code："+ context.getJobDetail().getKey().getName());

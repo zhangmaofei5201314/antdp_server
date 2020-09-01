@@ -32,7 +32,7 @@ import java.util.*;
 @Service
 public class QuartzServiceImpl implements QuartzServiceIntf {
 
-    public final static Logger log = (Logger) LoggerFactory.getLogger(QuartzServiceImpl.class);
+    public final static Logger log = (Logger) LoggerFactory.getLogger(QuartzServiceIntf.class);
 
     @Resource
     private QuartzMapper quartzMapper;
@@ -336,6 +336,7 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
             addJob_Timer(jobCode, jobPlanCode, jobPlanCode, jobPlanCode, clazz, cron, startDate, endDate);
         } else if ("1".equals(runType)){    // 指定间隔任务
             long interval = getInterval(Integer.parseInt(quartz.getRepeatInterval()),quartz.getRepeatUnit());
+            log.info("addQuartz ===>>" + interval + jobCode+ jobPlanCode + clazz);
             addJob_Interval(jobCode, jobPlanCode, jobPlanCode, jobPlanCode, clazz, interval, startDate, endDate);
         }
     }
@@ -452,6 +453,7 @@ public class QuartzServiceImpl implements QuartzServiceIntf {
             scheduler.scheduleJob(jobDetail, trigger);
             // 启动
             if (!scheduler.isShutdown()) {
+                log.info("addJob_Interval ===>> " + jobName + " START");
                 scheduler.start();
             }
         } catch (Exception e) {

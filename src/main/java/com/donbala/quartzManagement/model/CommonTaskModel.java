@@ -1,4 +1,4 @@
-package com.donbala.quartzManagement.test.model;
+package com.donbala.quartzManagement.model;
 
 import com.donbala.Commons.model.BaseResult;
 

@@ -1,12 +1,13 @@
 package com.donbala.quartzManagement.test.service.impl;
 
 import ch.qos.logback.classic.Logger;
-import com.donbala.quartzManagement.test.dao.CommonTaskDao;
-import com.donbala.quartzManagement.test.model.CommonTaskModel;
+import com.donbala.quartzManagement.dao.CommonTaskDao;
+import com.donbala.quartzManagement.model.CommonTaskModel;
 import com.donbala.quartzManagement.test.service.DemoTaskService;
 import com.donbala.util.DateUtil;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,12 +19,13 @@ import java.util.Date;
  * @date 2020/8/31 17:17
  * @description:
  */
+@Service
 public class DemoTaskServiceImpl implements DemoTaskService {
 
     public final static Logger log = (Logger) LoggerFactory.getLogger(DemoTaskServiceImpl.class);
 
     @Autowired
-    CommonTaskDao commonTaskDao;
+    private CommonTaskDao commonTaskDao;
 
     @Override
     public void demoTask(String jobCode, String jobPlanCode) {
@@ -36,9 +38,11 @@ public class DemoTaskServiceImpl implements DemoTaskService {
         commonTaskModel.setStartDate(currentDate);
         commonTaskModel.setMakeDate(currentDate);
         commonTaskModel.setModifyDate(currentDate);
-        //添加执行开始日志
-        commonTaskDao.insertJobRunLog(commonTaskModel);
 
+        log.info("添加执行开始日志");
+        //添加执行开始日志
+//        commonTaskDao.insertJobRunLog(commonTaskModel);
+        log.info("查询计划的上一次成功时间");
         //查询计划的上一次成功时间
         String lastSuccessDate = commonTaskDao.selectLastSuccessDateByJobPlan(commonTaskModel);
         if("".equals(lastSuccessDate) || lastSuccessDate == null) {
@@ -76,7 +80,7 @@ public class DemoTaskServiceImpl implements DemoTaskService {
         commonTaskModel.setEndDate(date);
         commonTaskModel.setModifyDate(date);
         //更新执行结果
-        commonTaskDao.updateJobRunLogBySerialno(commonTaskModel);
+//        commonTaskDao.updateJobRunLogBySerialno(commonTaskModel);
         log.info("更新日志完毕...");
     }
 }

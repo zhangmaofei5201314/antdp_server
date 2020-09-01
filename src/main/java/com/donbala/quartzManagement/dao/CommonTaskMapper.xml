@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.donbala.quartzManagement.test.dao.CommonTaskDao">
+<mapper namespace="com.donbala.quartzManagement.dao.CommonTaskDao">
 
-    <resultMap type="com.donbala.quartzManagement.test.model.CommonTaskModel" id="BaseResultMap">
+    <resultMap type="com.donbala.quartzManagement.model.CommonTaskModel" id="BaseResultMap">
         <result column="paramcode" property="paramCode" jdbcType="VARCHAR"/>
         <result column="paramvalue" property="paramValue" jdbcType="VARCHAR"/>
+        <result column="serialno" property="serialno" jdbcType="VARCHAR"/>
     </resultMap>
     <!--查询作业的参数-->
-    <select id="selectJobPlanParam" resultMap="BaseResultMap" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+    <select id="selectJobPlanParam" resultMap="BaseResultMap" parameterType="com.donbala.quartzManagement.model.CommonTaskModel">
     	select p.paramcode, p.paramvalue
 		  from CMS_jobplanparam p
 		 where 1 = 1
@@ -15,10 +16,10 @@
 		   and p.jobplancode = #{jobPlanCode}
 	</select>
 
-    <insert id="insertJobRunLog"  parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
-        <selectKey keyProperty="serialno" resultType="String" order="BEFORE">
+    <insert id="insertJobRunLog" parameterType="com.donbala.quartzManagement.model.CommonTaskModel">
+        <selectKey keyProperty="serialno" resultType="string" order="BEFORE">
             <![CDATA[
-		  select lpad(jobrunlog_serialno.nextval,20,'0') from dual
+		  select to_char(nvl(max(to_number(serialno)),0)+1) serialno from CMS_jobrunlog
 		  ]]>
         </selectKey>
         insert into CMS_jobrunlog
@@ -35,15 +36,15 @@
         (#{serialno},
         #{jobCode},
         #{jobPlanCode},
-        TO_DATE(#{startDate},'yyyy-mm-dd hh24:mi:ss'),
+        TO_char(#{startDate},'yyyy-mm-dd hh24:mi:ss'),
         #{runState},
-        TO_DATE(#{makeDate},'yyyy-mm-dd hh24:mi:ss'),
+        to_char(#{makeDate},'yyyy-mm-dd hh24:mi:ss'),
         'system',
-        TO_DATE(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),
+        to_char(#{modifyDate},'yyyy-mm-dd hh24:mi:ss'),
         'system')
     </insert>
 
-    <update id="updateJobRunLogBySerialno" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+    <update id="updateJobRunLogBySerialno" parameterType="com.donbala.quartzManagement.model.CommonTaskModel">
 		update CMS_jobrunlog a
 		   set a.enddate    = TO_DATE(#{endDate},'yyyy-mm-dd hh24:mi:ss'),
 		       a.runstate   = #{runState},
@@ -54,7 +55,7 @@
 	</update>
 
 
-    <select id="selectLastSuccessDate" resultType="String" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+    <select id="selectLastSuccessDate" resultType="String" parameterType="com.donbala.quartzManagement.model.CommonTaskModel">
 	    select DATE_FORMAT(max(a.startdate),'yyyy-mm-dd hh24:mi:ss') successdate
 		  from CMS_jobrunlog a
 		 where 1 = 1
@@ -63,7 +64,7 @@
 		   and a.jobcode = #{jobCode}
 	</select>
     <!--查询上次执行成功的时间-->
-    <select id="selectLastSuccessDateByJobPlan" resultType="String" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+    <select id="selectLastSuccessDateByJobPlan" resultType="String" parameterType="com.donbala.quartzManagement.model.CommonTaskModel">
 		 select v.lastSuccessDate
   			from (SELECT to_char(a.STARTDATE, 'yyyy-mm-dd hh24:mi:ss') lastSuccessDate
 					  FROM CMS_jobrunlog a
@@ -76,28 +77,28 @@
 	</select>
 
     <!--查询手工执行全量归并池上次成功时间 -->
-    <select id="selectHandAllMergePoolLastSuccessDate" resultType="String">
-		SELECT DATE_FORMAT(max(a.STARTDATE), 'yyyy-mm-dd hh24:mi:ss') successdate
-		  FROM CMS_handjobrunlog a
-		 WHERE 1 = 1
-		   and a.RUNSTATE = '1'
-		   and a.RUNRESULT = '成功'
-		   and a.DEALTYPE = '05'
-		   AND a.DEALCONTENT = 'allCustomerMergePool'
-	</select>
+<!--    <select id="selectHandAllMergePoolLastSuccessDate" resultType="String">-->
+<!--		SELECT DATE_FORMAT(max(a.STARTDATE), 'yyyy-mm-dd hh24:mi:ss') successdate-->
+<!--		  FROM CMS_handjobrunlog a-->
+<!--		 WHERE 1 = 1-->
+<!--		   and a.RUNSTATE = '1'-->
+<!--		   and a.RUNRESULT = '成功'-->
+<!--		   and a.DEALTYPE = '05'-->
+<!--		   AND a.DEALCONTENT = 'allCustomerMergePool'-->
+<!--	</select>-->
 
     <!--查询手工执行全量CRM刷新池上次成功时间 -->
-    <select id="selectHandAllRefreshPoolLastSuccessDate" resultType="String">
-		SELECT DATE_FORMAT(max(a.STARTDATE), 'yyyy-mm-dd hh24:mi:ss') successdate
-		  FROM CMS_handjobrunlog a
-		 WHERE 1 = 1
-		   and a.RUNSTATE = '1'
-		   and a.RUNRESULT = '成功'
-		   and a.DEALTYPE = '05'
-		   AND a.DEALCONTENT = 'allCustomerRefreshPool'
-	</select>
+<!--    <select id="selectHandAllRefreshPoolLastSuccessDate" resultType="String">-->
+<!--		SELECT DATE_FORMAT(max(a.STARTDATE), 'yyyy-mm-dd hh24:mi:ss') successdate-->
+<!--		  FROM CMS_handjobrunlog a-->
+<!--		 WHERE 1 = 1-->
+<!--		   and a.RUNSTATE = '1'-->
+<!--		   and a.RUNRESULT = '成功'-->
+<!--		   and a.DEALTYPE = '05'-->
+<!--		   AND a.DEALCONTENT = 'allCustomerRefreshPool'-->
+<!--	</select>-->
     <!--查询运行日志-->
-    <select id="selectJobRunLog"  resultType="com.donbala.quartzManagement.test.model.CommonTaskModel" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+    <select id="selectJobRunLog" resultType="com.donbala.quartzManagement.model.CommonTaskModel" parameterType="com.donbala.quartzManagement.model.CommonTaskModel">
         select t.jobName,t.startDate,t.endDate,t.runState,t.runResult,t.makeDate,t.makeUser,t.modifyDate,t.modifyUser
         from (select v.*, rownum as rn
         from (
@@ -133,7 +134,7 @@
         where t.rn<![CDATA[ > ]]>#{pageStart}
     </select>
     <!--查询日志分页-->
-    <select id="selectJobRunLogCount"  resultType="int" parameterType="com.donbala.quartzManagement.test.model.CommonTaskModel">
+    <select id="selectJobRunLogCount"  resultType="int" parameterType="com.donbala.quartzManagement.model.CommonTaskModel">
         SELECT count(B.SERIALNO)
         FROM CMS_JOBDEF A, CMS_JOBRUNLOG B
         WHERE A.JOBCODE = B.JOBCODE

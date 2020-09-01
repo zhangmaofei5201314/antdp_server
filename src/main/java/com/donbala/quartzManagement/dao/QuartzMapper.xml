@@ -72,9 +72,10 @@
 	<select id="getAvailableJobPlan" resultMap="BaseResultMap">
 		SELECT jobcode,
 			   jobplancode,
+			   runtype,
 			   (SELECT M.jobclassname FROM CMS_JOBDEF M WHERE M.jobcode = T.jobcode) jobclassname,
-			   DATE_FORMAT (startdate, '%Y-%m-%d %H:%i:%s') startdate,
-			   DATE_FORMAT (enddate, '%Y-%m-%d %H:%i:%s') enddate,
+			   TO_CHAR (startdate, 'yyyy-mm-dd hh24:mi:ss') startdate,
+			   TO_CHAR (enddate, 'yyyy-mm-dd hh24:mi:ss') enddate,
 			   repeatinterval,
 			   repeatunit
 		  FROM CMS_JOBPLANDEF T

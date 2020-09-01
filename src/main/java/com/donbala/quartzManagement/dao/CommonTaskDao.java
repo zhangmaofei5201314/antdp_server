@@ -1,6 +1,7 @@
-package com.donbala.quartzManagement.test.dao;
+package com.donbala.quartzManagement.dao;
 
-import com.donbala.quartzManagement.test.model.CommonTaskModel;
+import com.donbala.quartzManagement.model.CommonTaskModel;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -10,6 +11,8 @@ import java.util.List;
  * @date 2020/8/31 17:18
  * @description:
  */
+
+@Mapper
 public interface CommonTaskDao {
 
     List<CommonTaskModel> selectJobPlanParam(CommonTaskModel commonTaskModel);
@@ -20,9 +23,9 @@ public interface CommonTaskDao {
 
     String selectLastSuccessDateByJobPlan(CommonTaskModel commonTaskModel);
 
-    String selectHandAllMergePoolLastSuccessDate();
+//    String selectHandAllMergePoolLastSuccessDate();
 
-    String selectHandAllRefreshPoolLastSuccessDate();
+//    String selectHandAllRefreshPoolLastSuccessDate();
 
     List<CommonTaskModel> selectJobRunLog(CommonTaskModel commonTaskModel);
 
